@@ -139,7 +139,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
     },
   ]);
 
-  const [students, setStudents] = useState<Student[]>(generateMockStudents());
+  const [students, setStudents] = useState<Student[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
 
   const activeSession = sessions.find(s => s.isActive) || null;
