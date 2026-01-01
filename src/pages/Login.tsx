@@ -89,7 +89,7 @@ export default function Login() {
             </div>
             </div>
             <div className="p-4">
-              <div className="text-3xl font-bold text-secondary mb-1">2</div>
+              <div className="text-3xl font-bold text-secondary mb-1">​</div>
               <div className="text-sm text-primary-foreground/60">Sections</div>
             </div>
             <div className="p-4">
