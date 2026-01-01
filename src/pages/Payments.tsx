@@ -163,7 +163,7 @@ export default function Payments() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
           {/* Payment Form */}
           <div className="space-y-6">
             {/* Search */}
@@ -237,12 +237,12 @@ export default function Payments() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-border">
                     <div className="flex items-center gap-2">
                       <GraduationCap className="w-4 h-4 text-muted-foreground" />
                       <div>
                         <p className="text-xs text-muted-foreground">Class</p>
-                        <p className="font-medium">{getClassLabel(selectedStudent.class)}</p>
+                        <p className="font-medium text-sm sm:text-base">{getClassLabel(selectedStudent.class)}</p>
                       </div>
                     </div>
                     <div>
@@ -257,16 +257,16 @@ export default function Payments() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 bg-muted rounded-lg">
                     <div>
                       <p className="text-xs text-muted-foreground">Fee Payable</p>
-                      <p className="text-lg font-bold text-foreground">
+                      <p className="text-base sm:text-lg font-bold text-foreground">
                         {formatCurrency(studentFee)}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Outstanding</p>
-                      <p className={`text-lg font-bold ${studentBalance > 0 ? 'text-warning' : 'text-success'}`}>
+                      <p className={`text-base sm:text-lg font-bold ${studentBalance > 0 ? 'text-warning' : 'text-success'}`}>
                         {formatCurrency(studentBalance)}
                       </p>
                     </div>

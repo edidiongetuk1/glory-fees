@@ -116,42 +116,42 @@ export default function Reports() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <Card>
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <TrendingUp className="w-6 h-6 text-primary" />
+            <CardContent className="p-3 sm:p-5">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 rounded-lg bg-primary/10 flex-shrink-0">
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Expected Revenue</p>
-                  <p className="text-xl font-bold">{formatCurrency(totalExpected)}</p>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Expected Revenue</p>
+                  <p className="text-base sm:text-xl font-bold truncate">{formatCurrency(totalExpected)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-success/10">
-                  <PieChart className="w-6 h-6 text-success" />
+            <CardContent className="p-3 sm:p-5">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 rounded-lg bg-success/10 flex-shrink-0">
+                  <PieChart className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Collected</p>
-                  <p className="text-xl font-bold text-success">{formatCurrency(totalCollected)}</p>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Collected</p>
+                  <p className="text-base sm:text-xl font-bold text-success truncate">{formatCurrency(totalCollected)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-warning/10">
-                  <AlertTriangle className="w-6 h-6 text-warning" />
+            <CardContent className="p-3 sm:p-5">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 rounded-lg bg-warning/10 flex-shrink-0">
+                  <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-warning" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Outstanding</p>
-                  <p className="text-xl font-bold text-warning">{formatCurrency(outstanding)}</p>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Outstanding</p>
+                  <p className="text-base sm:text-xl font-bold text-warning truncate">{formatCurrency(outstanding)}</p>
                 </div>
               </div>
             </CardContent>
@@ -284,8 +284,8 @@ export default function Reports() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="analytics" className="mt-6">
-            <div className="grid lg:grid-cols-2 gap-6">
+          <TabsContent value="analytics" className="mt-4 sm:mt-6">
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
               {/* Revenue Breakdown */}
               <Card>
                 <CardHeader>
