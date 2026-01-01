@@ -7,58 +7,54 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { GraduationCap, Lock, User, Loader2 } from 'lucide-react';
-
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const {
+    login
+  } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!username.trim() || !password.trim()) {
       toast({
         title: 'Error',
         description: 'Please enter both username and password',
-        variant: 'destructive',
+        variant: 'destructive'
       });
       return;
     }
-
     setIsLoading(true);
-    
     try {
       const success = await login(username, password);
-      
       if (success) {
         toast({
           title: 'Welcome!',
-          description: 'You have successfully logged in.',
+          description: 'You have successfully logged in.'
         });
         navigate('/dashboard');
       } else {
         toast({
           title: 'Login Failed',
           description: 'Invalid username or password. Please try again.',
-          variant: 'destructive',
+          variant: 'destructive'
         });
       }
     } catch {
       toast({
         title: 'Error',
         description: 'An unexpected error occurred. Please try again.',
-        variant: 'destructive',
+        variant: 'destructive'
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen flex">
+  return <div className="min-h-screen flex">
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 gradient-navy relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30" />
@@ -88,7 +84,7 @@ export default function Login() {
 
           <div className="mt-12 grid grid-cols-3 gap-6 text-center animate-slide-up">
             <div className="p-4">
-              <div className="text-3xl font-bold text-secondary mb-1">500+</div>
+              <div className="text-3xl font-bold text-secondary mb-1">​</div>
               <div className="text-sm text-primary-foreground/60">Students</div>
             </div>
             <div className="p-4">
@@ -130,15 +126,7 @@ export default function Login() {
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="username"
-                      type="text"
-                      placeholder="Enter your username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="pl-10"
-                      disabled={isLoading}
-                    />
+                    <Input id="username" type="text" placeholder="Enter your username" value={username} onChange={e => setUsername(e.target.value)} className="pl-10" disabled={isLoading} />
                   </div>
                 </div>
 
@@ -148,33 +136,15 @@ export default function Login() {
                   </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
-                      disabled={isLoading}
-                    />
+                    <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} className="pl-10" disabled={isLoading} />
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  variant="gold"
-                  size="lg"
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
+                <Button type="submit" variant="gold" size="lg" className="w-full" disabled={isLoading}>
+                  {isLoading ? <>
                       <Loader2 className="w-5 h-5 animate-spin" />
                       Signing in...
-                    </>
-                  ) : (
-                    'Sign In'
-                  )}
+                    </> : 'Sign In'}
                 </Button>
               </form>
 
@@ -205,6 +175,5 @@ export default function Login() {
           </p>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
