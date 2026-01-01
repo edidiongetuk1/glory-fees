@@ -85,7 +85,8 @@ export default function Login() {
           <div className="mt-12 grid grid-cols-3 gap-6 text-center animate-slide-up">
             <div className="p-4">
               <div className="text-3xl font-bold text-secondary mb-1">​</div>
-              <div className="text-sm text-primary-foreground/60">Students</div>
+              <div className="text-sm text-primary-foreground/60">
+            </div>
             </div>
             <div className="p-4">
               <div className="text-3xl font-bold text-secondary mb-1">2</div>
