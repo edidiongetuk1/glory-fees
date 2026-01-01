@@ -279,16 +279,16 @@ export default function Students() {
         </Card>
 
         {/* Class Folders */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           {/* Primary Section */}
           <div>
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <GraduationCap className="w-4 h-4 text-primary" />
+            <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
               </div>
               Nursery & Primary
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3">
               {PRIMARY_CLASSES.map((c) => {
                 const count = getStudentsByClass(c.value).length;
                 const isSelected = selectedClass === c.value;
@@ -299,15 +299,15 @@ export default function Students() {
                       setSelectedClass(isSelected ? null : c.value);
                       setSearchQuery('');
                     }}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                    className={`p-2 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all duration-200 text-left ${
                       isSelected
                         ? 'border-primary bg-primary/5 shadow-card'
                         : 'border-border bg-card hover:border-primary/30 hover:shadow-soft'
                     }`}
                   >
-                    <FolderOpen className={`w-8 h-8 mb-2 ${isSelected ? 'text-primary' : 'text-secondary'}`} />
-                    <p className="font-medium text-sm">{c.label}</p>
-                    <p className="text-xs text-muted-foreground">{count} students</p>
+                    <FolderOpen className={`w-5 h-5 sm:w-8 sm:h-8 mb-1 sm:mb-2 ${isSelected ? 'text-primary' : 'text-secondary'}`} />
+                    <p className="font-medium text-xs sm:text-sm truncate">{c.label}</p>
+                    <p className="text-xs text-muted-foreground">{count}</p>
                   </button>
                 );
               })}
@@ -316,13 +316,13 @@ export default function Students() {
 
           {/* Secondary Section */}
           <div>
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
-                <GraduationCap className="w-4 h-4 text-secondary-foreground" />
+            <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
+                <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary-foreground" />
               </div>
               Secondary
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3">
               {SECONDARY_CLASSES.map((c) => {
                 const count = getStudentsByClass(c.value).length;
                 const isSelected = selectedClass === c.value;
@@ -333,15 +333,15 @@ export default function Students() {
                       setSelectedClass(isSelected ? null : c.value);
                       setSearchQuery('');
                     }}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                    className={`p-2 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all duration-200 text-left ${
                       isSelected
                         ? 'border-primary bg-primary/5 shadow-card'
                         : 'border-border bg-card hover:border-primary/30 hover:shadow-soft'
                     }`}
                   >
-                    <FolderOpen className={`w-8 h-8 mb-2 ${isSelected ? 'text-primary' : 'text-secondary'}`} />
-                    <p className="font-medium text-sm">{c.label}</p>
-                    <p className="text-xs text-muted-foreground">{count} students</p>
+                    <FolderOpen className={`w-5 h-5 sm:w-8 sm:h-8 mb-1 sm:mb-2 ${isSelected ? 'text-primary' : 'text-secondary'}`} />
+                    <p className="font-medium text-xs sm:text-sm truncate">{c.label}</p>
+                    <p className="text-xs text-muted-foreground">{count}</p>
                   </button>
                 );
               })}
@@ -352,59 +352,59 @@ export default function Students() {
         {/* Student List */}
         {(selectedClass || searchQuery) && (
           <Card className="animate-slide-up">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                 {selectedClass ? getClassLabel(selectedClass) : 'Search Results'}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 {displayedStudents.length} student(s) found
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6">
               {displayedStudents.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No students found</p>
+                <div className="text-center py-8 sm:py-12 text-muted-foreground">
+                  <Users className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                  <p className="text-sm sm:text-base">No students found</p>
                 </div>
               ) : (
                 <div className="divide-y divide-border">
                   {displayedStudents.map((student) => (
                     <div
                       key={student.id}
-                      className="flex items-center justify-between py-4 hover:bg-muted/50 -mx-6 px-6 transition-colors"
+                      className="flex items-center justify-between py-3 sm:py-4 hover:bg-muted/50 -mx-3 sm:-mx-6 px-3 sm:px-6 transition-colors"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="font-semibold text-primary">
+                      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <span className="font-semibold text-primary text-sm sm:text-base">
                             {student.firstName.charAt(0)}{student.surname.charAt(0)}
                           </span>
                         </div>
-                        <div>
-                          <p className="font-medium">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm sm:text-base truncate">
                             {student.firstName} {student.middleName} {student.surname}
                           </p>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Hash className="w-3 h-3" />
                               {student.regNumber}
                             </span>
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 hidden sm:flex">
                               <Phone className="w-3 h-3" />
                               {student.parentPhone}
                             </span>
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                      <div className="text-right flex-shrink-0 ml-2">
+                        <span className={`inline-flex px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${
                           student.isNewIntake 
                             ? 'bg-success/10 text-success' 
                             : 'bg-muted text-muted-foreground'
                         }`}>
                           {student.isNewIntake ? 'New' : 'Returning'}
                         </span>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-muted-foreground mt-1 hidden sm:block">
                           {getClassLabel(student.class)}
                         </p>
                       </div>
