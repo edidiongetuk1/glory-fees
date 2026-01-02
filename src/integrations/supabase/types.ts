@@ -14,7 +14,179 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      academic_sessions: {
+        Row: {
+          created_at: string
+          end_year: number
+          id: string
+          is_active: boolean
+          name: string
+          start_year: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_year: number
+          id?: string
+          is_active?: boolean
+          name: string
+          start_year: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_year?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          start_year?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          id: string
+          notes: string | null
+          payment_method: string
+          student_id: string
+          term_id: string
+          transaction_id: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method: string
+          student_id: string
+          term_id: string
+          transaction_id: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          student_id?: string
+          term_id?: string
+          transaction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          class: string
+          created_at: string
+          first_name: string
+          id: string
+          is_new_intake: boolean
+          middle_name: string | null
+          parent_phone: string
+          reg_number: string
+          section: Database["public"]["Enums"]["section_type"]
+          surname: string
+          updated_at: string
+          user_id: string
+          year_of_entry: string
+        }
+        Insert: {
+          class: string
+          created_at?: string
+          first_name: string
+          id?: string
+          is_new_intake?: boolean
+          middle_name?: string | null
+          parent_phone: string
+          reg_number: string
+          section: Database["public"]["Enums"]["section_type"]
+          surname: string
+          updated_at?: string
+          user_id: string
+          year_of_entry: string
+        }
+        Update: {
+          class?: string
+          created_at?: string
+          first_name?: string
+          id?: string
+          is_new_intake?: boolean
+          middle_name?: string | null
+          parent_phone?: string
+          reg_number?: string
+          section?: Database["public"]["Enums"]["section_type"]
+          surname?: string
+          updated_at?: string
+          user_id?: string
+          year_of_entry?: string
+        }
+        Relationships: []
+      }
+      terms: {
+        Row: {
+          created_at: string
+          fees: Json
+          id: string
+          is_active: boolean
+          session_id: string
+          term: Database["public"]["Enums"]["term_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fees?: Json
+          id?: string
+          is_active?: boolean
+          session_id: string
+          term: Database["public"]["Enums"]["term_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fees?: Json
+          id?: string
+          is_active?: boolean
+          session_id?: string
+          term?: Database["public"]["Enums"]["term_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terms_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +195,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      section_type: "primary" | "secondary"
+      term_type: "1st" | "2nd" | "3rd"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +323,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      section_type: ["primary", "secondary"],
+      term_type: ["1st", "2nd", "3rd"],
+    },
   },
 } as const
