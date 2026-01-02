@@ -11,7 +11,7 @@ import SplashScreen from '@/components/SplashScreen';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
@@ -32,17 +32,17 @@ export default function Login() {
   } = useToast();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
+    if (!username.trim() || !password.trim()) {
       toast({
         title: 'Error',
-        description: 'Please enter both email and password',
+        description: 'Please enter both username and password',
         variant: 'destructive'
       });
       return;
     }
     setIsLoading(true);
     try {
-      const success = await login(email, password);
+      const success = await login(username, password);
       if (success) {
         toast({
           title: 'Welcome!',
@@ -52,7 +52,7 @@ export default function Login() {
       } else {
         toast({
           title: 'Login Failed',
-          description: 'Invalid email or password. Please try again.',
+          description: 'Invalid username or password. Please try again.',
           variant: 'destructive'
         });
       }
@@ -140,12 +140,12 @@ export default function Login() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">
-                    Email
+                  <Label htmlFor="username" className="text-sm font-medium">
+                    Username
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} className="pl-10" disabled={isLoading} />
+                    <Input id="username" type="text" placeholder="Enter your username" value={username} onChange={e => setUsername(e.target.value)} className="pl-10" disabled={isLoading} />
                   </div>
                 </div>
 
@@ -169,33 +169,21 @@ export default function Login() {
 
               <div className="mt-6 pt-6 border-t border-border">
                 <p className="text-xs text-muted-foreground text-center">
-                  Demo Credentials (password: demo123):
+                  Demo Credentials:
                 </p>
                 <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-center">
-                  <button
-                    type="button"
-                    onClick={() => { setEmail('admin@soaringglory.edu'); setPassword('demo123'); }}
-                    className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer"
-                  >
-                    <div className="font-medium text-foreground">Admin</div>
-                    <div className="text-muted-foreground truncate text-[10px]">admin@...</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setEmail('bursar@soaringglory.edu'); setPassword('demo123'); }}
-                    className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer"
-                  >
-                    <div className="font-medium text-foreground">Bursar</div>
-                    <div className="text-muted-foreground truncate text-[10px]">bursar@...</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setEmail('staff@soaringglory.edu'); setPassword('demo123'); }}
-                    className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer"
-                  >
-                    <div className="font-medium text-foreground">Staff</div>
-                    <div className="text-muted-foreground truncate text-[10px]">staff@...</div>
-                  </button>
+                  <div className="p-2 rounded-lg bg-muted">
+                    <div className="font-medium text-foreground">admin</div>
+                    <div className="text-muted-foreground">admin123</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-muted">
+                    <div className="font-medium text-foreground">bursar</div>
+                    <div className="text-muted-foreground">bursar123</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-muted">
+                    <div className="font-medium text-foreground">staff</div>
+                    <div className="text-muted-foreground">staff123</div>
+                  </div>
                 </div>
               </div>
             </CardContent>

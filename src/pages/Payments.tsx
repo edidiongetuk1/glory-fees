@@ -31,12 +31,10 @@ import {
   GraduationCap,
   Printer,
   CheckCircle,
-  History,
-  Calendar,
 } from 'lucide-react';
 
 export default function Payments() {
-  const { searchStudents, getStudentFee, getStudentBalance, addPayment, getStudentPayments, activeTerm, activeSession, terms } = useSchool();
+  const { searchStudents, getStudentFee, getStudentBalance, addPayment, activeTerm, activeSession } = useSchool();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -455,110 +453,6 @@ export default function Payments() {
             )}
           </div>
         </div>
-
-        {/* Payment History */}
-        {selectedStudent && (
-          <Card className="animate-slide-up">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <History className="w-5 h-5" />
-                Payment History
-              </CardTitle>
-              <CardDescription>
-                All payments made by {selectedStudent.firstName} {selectedStudent.surname}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {(() => {
-                const studentPayments = getStudentPayments(selectedStudent.id);
-                if (studentPayments.length === 0) {
-                  return (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <History className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                      <p>No payment history found</p>
-                    </div>
-                  );
-                }
-                
-                const totalPaid = studentPayments.reduce((sum, p) => sum + p.amountPaid, 0);
-                
-                return (
-                  <div className="space-y-4">
-                    {/* Summary */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Total Payments</p>
-                        <p className="text-lg font-bold">{studentPayments.length}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Total Paid</p>
-                        <p className="text-lg font-bold text-success">{formatCurrency(totalPaid)}</p>
-                      </div>
-                      <div className="col-span-2 sm:col-span-1">
-                        <p className="text-xs text-muted-foreground">Outstanding (This Term)</p>
-                        <p className={`text-lg font-bold ${studentBalance > 0 ? 'text-warning' : 'text-success'}`}>
-                          {formatCurrency(studentBalance)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Payment List */}
-                    <div className="divide-y divide-border">
-                      {studentPayments.map((payment) => {
-                        const term = terms.find(t => t.id === payment.termId);
-                        return (
-                          <div
-                            key={payment.id}
-                            className="flex items-center justify-between py-4 hover:bg-muted/50 -mx-4 px-4 transition-colors"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                payment.paymentMethod === 'cash' 
-                                  ? 'bg-success/10' 
-                                  : payment.paymentMethod === 'pos'
-                                    ? 'bg-primary/10'
-                                    : 'bg-secondary/10'
-                              }`}>
-                                {payment.paymentMethod === 'cash' ? (
-                                  <Banknote className="w-5 h-5 text-success" />
-                                ) : payment.paymentMethod === 'pos' ? (
-                                  <CreditCard className="w-5 h-5 text-primary" />
-                                ) : (
-                                  <Building2 className="w-5 h-5 text-secondary-foreground" />
-                                )}
-                              </div>
-                              <div>
-                                <p className="font-medium">{formatCurrency(payment.amountPaid)}</p>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <span className="capitalize">{payment.paymentMethod}</span>
-                                  {term && (
-                                    <>
-                                      <span>•</span>
-                                      <span>{term.term} Term</span>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-mono text-xs text-muted-foreground">
-                                {payment.transactionId}
-                              </p>
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                <Calendar className="w-3 h-3" />
-                                {formatDateTime(payment.createdAt)}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })()}
-            </CardContent>
-          </Card>
-        )}
       </div>
     </DashboardLayout>
   );

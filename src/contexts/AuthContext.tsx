@@ -30,34 +30,6 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   staff: ['add_student', 'receive_payment', 'view_reports'],
 };
 
-// Demo user emails for role assignment
-const DEMO_USERS: Record<string, UserRole> = {
-  'admin@soaringglory.edu': 'super_admin',
-  'bursar@soaringglory.edu': 'bursar',
-  'staff@soaringglory.edu': 'staff',
-};
-
-async function fetchUserRole(userId: string, email: string): Promise<UserRole> {
-  // Check if this is a demo user first
-  const demoRole = DEMO_USERS[email.toLowerCase()];
-  if (demoRole) {
-    return demoRole;
-  }
-
-  // Try to fetch role from database
-  const { data } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (data?.role) {
-    return data.role as UserRole;
-  }
-
-  return 'staff'; // Default role
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -69,38 +41,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (event, session) => {
         setSession(session);
         if (session?.user) {
-          const email = session.user.email || '';
-          // Defer role fetch to avoid deadlock
-          setTimeout(async () => {
-            const role = await fetchUserRole(session.user.id, email);
-            setUser({
-              id: session.user.id,
-              username: email.split('@')[0] || 'user',
-              role,
-              name: session.user.user_metadata?.name || email.split('@')[0] || 'User',
-              email,
-            });
-            setIsLoading(false);
-          }, 0);
+          setUser({
+            id: session.user.id,
+            username: session.user.email?.split('@')[0] || 'user',
+            role: 'super_admin', // Default role for now
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+            email: session.user.email || '',
+          });
         } else {
           setUser(null);
-          setIsLoading(false);
         }
+        setIsLoading(false);
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        const email = session.user.email || '';
-        const role = await fetchUserRole(session.user.id, email);
         setUser({
           id: session.user.id,
-          username: email.split('@')[0] || 'user',
-          role,
-          name: session.user.user_metadata?.name || email.split('@')[0] || 'User',
-          email,
+          username: session.user.email?.split('@')[0] || 'user',
+          role: 'super_admin',
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+          email: session.user.email || '',
         });
       }
       setIsLoading(false);
