@@ -1,4 +1,4 @@
-export type UserRole = 'super_admin' | 'bursar' | 'staff';
+export type UserRole = 'super_admin' | 'bursary' | 'staff';
 
 export interface User {
   id: string;
@@ -39,10 +39,11 @@ export interface Student {
   surname: string;
   section: Section;
   class: SchoolClass;
-  parentPhone: string;
   yearOfEntry: string;
   isNewIntake: boolean;
   createdAt: Date;
+  sessionId?: string;
+  previousClass?: string;
 }
 
 export interface AcademicSession {
@@ -86,6 +87,18 @@ export interface Payment {
   createdAt: Date;
 }
 
+export interface FeeChangeRequest {
+  id: string;
+  termId: string;
+  class: SchoolClass;
+  newIntakeFee: number;
+  returningFee: number;
+  requestedBy: string;
+  approvedBy?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: Date;
+}
+
 export const PRIMARY_CLASSES: { value: PrimaryClass; label: string }[] = [
   { value: 'creche', label: 'Creche' },
   { value: 'tender_love_1', label: 'Tender Love 1' },
@@ -110,6 +123,26 @@ export const SECONDARY_CLASSES: { value: SecondaryClass; label: string }[] = [
 
 export const ALL_CLASSES = [...PRIMARY_CLASSES, ...SECONDARY_CLASSES];
 
+// Class progression map - defines next class for each class
+export const CLASS_PROGRESSION: Record<SchoolClass, SchoolClass | 'graduated' | 'manual'> = {
+  creche: 'manual', // Creche stays manual as per requirement
+  tender_love_1: 'tender_love_2',
+  tender_love_2: 'nursery_1',
+  nursery_1: 'nursery_2',
+  nursery_2: 'primary_1',
+  primary_1: 'primary_2',
+  primary_2: 'primary_3',
+  primary_3: 'primary_4',
+  primary_4: 'primary_5',
+  primary_5: 'jss_1',
+  jss_1: 'jss_2',
+  jss_2: 'jss_3',
+  jss_3: 'sss_1',
+  sss_1: 'sss_2',
+  sss_2: 'sss_3',
+  sss_3: 'graduated',
+};
+
 export function getClassLabel(classValue: SchoolClass): string {
   const found = ALL_CLASSES.find(c => c.value === classValue);
   return found?.label || classValue;
@@ -117,6 +150,10 @@ export function getClassLabel(classValue: SchoolClass): string {
 
 export function getSectionFromClass(classValue: SchoolClass): Section {
   return PRIMARY_CLASSES.some(c => c.value === classValue) ? 'primary' : 'secondary';
+}
+
+export function getNextClass(currentClass: SchoolClass): SchoolClass | 'graduated' | 'manual' {
+  return CLASS_PROGRESSION[currentClass];
 }
 
 export function generateRegNumber(

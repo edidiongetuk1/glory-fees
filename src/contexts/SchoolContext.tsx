@@ -15,6 +15,7 @@ import {
   generateTransactionId,
   PRIMARY_CLASSES,
   SECONDARY_CLASSES,
+  getNextClass,
 } from '@/types/school';
 
 interface SchoolContextType {
@@ -35,9 +36,12 @@ interface SchoolContextType {
   students: Student[];
   recentStudents: Student[];
   addStudent: (student: Omit<Student, 'id' | 'regNumber' | 'createdAt'>) => Promise<Student | null>;
+  updateStudent: (studentId: string, data: Partial<Student>) => Promise<boolean>;
+  deleteStudent: (studentId: string, reason?: string) => Promise<boolean>;
   getStudentsByClass: (classValue: SchoolClass) => Student[];
   searchStudents: (query: string) => Student[];
   getStudentFee: (student: Student) => number;
+  promoteStudentsToNextClass: () => Promise<{ promoted: number; graduated: number; manual: number }>;
 
   // Payments
   payments: Payment[];
@@ -158,10 +162,11 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
           surname: s.surname,
           section: s.section as Section,
           class: s.class as SchoolClass,
-          parentPhone: s.parent_phone,
           yearOfEntry: s.year_of_entry,
           isNewIntake: s.is_new_intake,
           createdAt: new Date(s.created_at),
+          sessionId: s.session_id || undefined,
+          previousClass: s.previous_class || undefined,
         }))
       );
 
@@ -369,10 +374,10 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
             surname: studentData.surname,
             section: studentData.section,
             class: studentData.class,
-            parent_phone: studentData.parentPhone,
             year_of_entry: studentData.yearOfEntry,
             is_new_intake: studentData.isNewIntake,
             user_id: user.id,
+            session_id: activeSession?.id || null,
           })
           .select()
           .single();
@@ -388,10 +393,10 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
             surname: data.surname,
             section: data.section as Section,
             class: data.class as SchoolClass,
-            parentPhone: data.parent_phone,
             yearOfEntry: data.year_of_entry,
             isNewIntake: data.is_new_intake,
             createdAt: new Date(data.created_at),
+            sessionId: data.session_id || undefined,
           };
           setStudents((prev) => [newStudent, ...prev]);
           toast({ title: 'Success', description: 'Student added successfully' });
@@ -404,8 +409,141 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
     },
+    [students, user, toast, activeSession]
+  );
+
+  const updateStudent = useCallback(
+    async (studentId: string, data: Partial<Student>): Promise<boolean> => {
+      try {
+        const updateData: Record<string, unknown> = {};
+        if (data.firstName !== undefined) updateData.first_name = data.firstName;
+        if (data.middleName !== undefined) updateData.middle_name = data.middleName || null;
+        if (data.surname !== undefined) updateData.surname = data.surname;
+        if (data.class !== undefined) updateData.class = data.class;
+        if (data.section !== undefined) updateData.section = data.section;
+        if (data.isNewIntake !== undefined) updateData.is_new_intake = data.isNewIntake;
+
+        const { error: updateError } = await supabase
+          .from('students')
+          .update(updateData)
+          .eq('id', studentId);
+
+        if (updateError) throw updateError;
+
+        setStudents((prev) =>
+          prev.map((s) => (s.id === studentId ? { ...s, ...data } : s))
+        );
+        toast({ title: 'Success', description: 'Student updated successfully' });
+        return true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to update student';
+        toast({ title: 'Error', description: message, variant: 'destructive' });
+        return false;
+      }
+    },
+    [toast]
+  );
+
+  const deleteStudent = useCallback(
+    async (studentId: string, reason?: string): Promise<boolean> => {
+      if (!user) {
+        toast({ title: 'Error', description: 'You must be logged in', variant: 'destructive' });
+        return false;
+      }
+
+      try {
+        const student = students.find((s) => s.id === studentId);
+        if (!student) throw new Error('Student not found');
+
+        // Archive the student first
+        const { error: archiveError } = await supabase
+          .from('student_archives')
+          .insert({
+            original_id: student.id,
+            reg_number: student.regNumber,
+            first_name: student.firstName,
+            middle_name: student.middleName || null,
+            surname: student.surname,
+            section: student.section,
+            class: student.class,
+            year_of_entry: student.yearOfEntry,
+            is_new_intake: student.isNewIntake,
+            session_id: student.sessionId || null,
+            archived_by: user.id,
+            archive_reason: reason || 'Deleted by admin',
+          });
+
+        if (archiveError) throw archiveError;
+
+        // Now delete the student
+        const { error: deleteError } = await supabase
+          .from('students')
+          .delete()
+          .eq('id', studentId);
+
+        if (deleteError) throw deleteError;
+
+        setStudents((prev) => prev.filter((s) => s.id !== studentId));
+        toast({ title: 'Success', description: 'Student deleted and archived' });
+        return true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to delete student';
+        toast({ title: 'Error', description: message, variant: 'destructive' });
+        return false;
+      }
+    },
     [students, user, toast]
   );
+
+  const promoteStudentsToNextClass = useCallback(async (): Promise<{ promoted: number; graduated: number; manual: number }> => {
+    const results = { promoted: 0, graduated: 0, manual: 0 };
+
+    try {
+      for (const student of students) {
+        const nextClass = getNextClass(student.class);
+
+        if (nextClass === 'manual') {
+          // Creche students need manual promotion
+          results.manual++;
+          continue;
+        }
+
+        if (nextClass === 'graduated') {
+          // SSS 3 students graduate - mark as inactive or move to archive
+          results.graduated++;
+          continue;
+        }
+
+        // Promote to next class
+        const { error } = await supabase
+          .from('students')
+          .update({
+            previous_class: student.class,
+            class: nextClass,
+            is_new_intake: false, // After promotion, they're returning students
+          })
+          .eq('id', student.id);
+
+        if (!error) {
+          results.promoted++;
+        }
+      }
+
+      // Refresh data after promotion
+      await loadData();
+      
+      toast({
+        title: 'Promotion Complete',
+        description: `${results.promoted} promoted, ${results.graduated} graduated, ${results.manual} require manual action`,
+      });
+
+      return results;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to promote students';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
+      return results;
+    }
+  }, [students, loadData, toast]);
 
   const getStudentsByClass = useCallback(
     (classValue: SchoolClass): Student[] => {
@@ -553,9 +691,12 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         students,
         recentStudents,
         addStudent,
+        updateStudent,
+        deleteStudent,
         getStudentsByClass,
         searchStudents,
         getStudentFee,
+        promoteStudentsToNextClass,
         payments,
         addPayment,
         getStudentPayments,

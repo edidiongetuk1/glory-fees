@@ -11,6 +11,19 @@ interface AuthUser {
   email?: string;
 }
 
+// Define all possible permissions
+export type Permission = 
+  | 'settings'           // Access to system settings
+  | 'delete_student'     // Can delete students
+  | 'edit_student'       // Can edit student details
+  | 'add_student'        // Can add new students
+  | 'receive_payment'    // Can receive payments
+  | 'view_reports'       // Can view reports
+  | 'edit_fees'          // Can edit fee structure
+  | 'approve_fees'       // Can approve fee changes
+  | 'promote_students'   // Can promote students to next class
+  | 'manage_roles';      // Can manage user roles
+
 interface AuthContextType {
   user: AuthUser | null;
   session: Session | null;
@@ -19,15 +32,40 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   signup: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
-  hasPermission: (permission: 'settings' | 'delete' | 'add_student' | 'receive_payment' | 'view_reports') => boolean;
+  hasPermission: (permission: Permission) => boolean;
+  isSuperAdmin: () => boolean;
+  isBursary: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  super_admin: ['settings', 'delete', 'add_student', 'receive_payment', 'view_reports'],
-  bursar: ['add_student', 'receive_payment', 'view_reports'],
-  staff: ['add_student', 'receive_payment', 'view_reports'],
+// Role-based permissions mapping
+// Super Admin: Full control - edit/delete students, approve changes, manage settings
+// Bursary: Can add students, update payments, set fees (requires approval)
+// Staff: View-only access with basic payment recording
+const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  super_admin: [
+    'settings',
+    'delete_student',
+    'edit_student',
+    'add_student',
+    'receive_payment',
+    'view_reports',
+    'edit_fees',
+    'approve_fees',
+    'promote_students',
+    'manage_roles',
+  ],
+  bursary: [
+    'add_student',
+    'receive_payment',
+    'view_reports',
+    'edit_fees', // Can request fee edits (requires approval)
+  ],
+  staff: [
+    'receive_payment',
+    'view_reports',
+  ],
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -164,9 +202,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
   }, []);
 
-  const hasPermission = useCallback((permission: string): boolean => {
+  const hasPermission = useCallback((permission: Permission): boolean => {
     if (!user) return false;
     return ROLE_PERMISSIONS[user.role]?.includes(permission) ?? false;
+  }, [user]);
+
+  const isSuperAdmin = useCallback((): boolean => {
+    return user?.role === 'super_admin';
+  }, [user]);
+
+  const isBursary = useCallback((): boolean => {
+    return user?.role === 'bursary';
   }, [user]);
 
   return (
@@ -180,6 +226,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signup,
         logout,
         hasPermission,
+        isSuperAdmin,
+        isBursary,
       }}
     >
       {children}
