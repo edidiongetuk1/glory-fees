@@ -15,6 +15,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -39,6 +50,8 @@ import {
   Check,
   Save,
   Calendar,
+  ArrowUpCircle,
+  Loader2,
 } from 'lucide-react';
 
 export default function Settings() {
@@ -52,14 +65,17 @@ export default function Settings() {
     createTerm,
     setActiveTerm,
     updateTermFees,
+    promoteStudentsToNextClass,
+    students,
   } = useSchool();
-  const { hasPermission } = useAuth();
+  const { hasPermission, isSuperAdmin } = useAuth();
   const { toast } = useToast();
 
   const [newSessionName, setNewSessionName] = useState('');
   const [newSessionStartYear, setNewSessionStartYear] = useState(new Date().getFullYear());
   const [isSessionDialogOpen, setIsSessionDialogOpen] = useState(false);
   const [editingFees, setEditingFees] = useState<FeeStructure[] | null>(null);
+  const [isPromoting, setIsPromoting] = useState(false);
 
   if (!hasPermission('settings')) {
     return (
@@ -78,6 +94,7 @@ export default function Settings() {
   }
 
   const currentSessionTerms = terms.filter(t => t.sessionId === activeSession?.id);
+  const canPromoteStudents = hasPermission('promote_students');
 
   const handleCreateSession = () => {
     if (!newSessionName.trim()) {
@@ -132,6 +149,19 @@ export default function Settings() {
         f.class === classValue ? { ...f, [field]: value } : f
       )
     );
+  };
+
+  const handlePromoteStudents = async () => {
+    setIsPromoting(true);
+    try {
+      const results = await promoteStudentsToNextClass();
+      toast({
+        title: 'Class Promotion Complete',
+        description: `${results.promoted} students promoted, ${results.graduated} graduated (SSS 3), ${results.manual} Creche students require manual promotion`,
+      });
+    } finally {
+      setIsPromoting(false);
+    }
   };
 
   const displayFees = editingFees || activeTerm?.fees || [];
@@ -323,6 +353,70 @@ export default function Settings() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Class Promotion - Only for Super Admin */}
+        {canPromoteStudents && (
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ArrowUpCircle className="w-5 h-5 text-primary" />
+                Class Promotion
+              </CardTitle>
+              <CardDescription>
+                Promote all students to their next class for the new session. 
+                Creche students require manual promotion. SSS 3 students will be marked as graduated.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="font-medium">Total Students: {students.length}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Students will be promoted to the next class and marked as returning students.
+                  </p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="gold" disabled={isPromoting || students.length === 0}>
+                      {isPromoting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Promoting...
+                        </>
+                      ) : (
+                        <>
+                          <ArrowUpCircle className="w-4 h-4 mr-2" />
+                          Promote All Students
+                        </>
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirm Class Promotion</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will promote all students to their next class:
+                        <ul className="list-disc list-inside mt-2 space-y-1">
+                          <li>Creche students will be skipped (require manual promotion)</li>
+                          <li>SSS 3 students will be marked as graduated</li>
+                          <li>All other students move to the next class</li>
+                          <li>Students will be marked as "returning" instead of "new intake"</li>
+                        </ul>
+                        <p className="mt-4 font-medium">This action cannot be undone easily!</p>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handlePromoteStudents}>
+                        Yes, Promote All
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Fee Configuration */}
         {activeTerm && (

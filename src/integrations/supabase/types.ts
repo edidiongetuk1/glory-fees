@@ -47,6 +47,53 @@ export type Database = {
         }
         Relationships: []
       }
+      fee_changes: {
+        Row: {
+          approved_by: string | null
+          class: string
+          created_at: string
+          id: string
+          new_intake_fee: number
+          requested_by: string
+          returning_fee: number
+          status: string
+          term_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved_by?: string | null
+          class: string
+          created_at?: string
+          id?: string
+          new_intake_fee: number
+          requested_by: string
+          returning_fee: number
+          status?: string
+          term_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved_by?: string | null
+          class?: string
+          created_at?: string
+          id?: string
+          new_intake_fee?: number
+          requested_by?: string
+          returning_fee?: number
+          status?: string
+          term_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_changes_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount_paid: number
@@ -98,6 +145,57 @@ export type Database = {
           },
         ]
       }
+      student_archives: {
+        Row: {
+          archive_reason: string | null
+          archived_at: string
+          archived_by: string
+          class: string
+          first_name: string
+          id: string
+          is_new_intake: boolean
+          middle_name: string | null
+          original_id: string
+          reg_number: string
+          section: string
+          session_id: string | null
+          surname: string
+          year_of_entry: string
+        }
+        Insert: {
+          archive_reason?: string | null
+          archived_at?: string
+          archived_by: string
+          class: string
+          first_name: string
+          id?: string
+          is_new_intake: boolean
+          middle_name?: string | null
+          original_id: string
+          reg_number: string
+          section: string
+          session_id?: string | null
+          surname: string
+          year_of_entry: string
+        }
+        Update: {
+          archive_reason?: string | null
+          archived_at?: string
+          archived_by?: string
+          class?: string
+          first_name?: string
+          id?: string
+          is_new_intake?: boolean
+          middle_name?: string | null
+          original_id?: string
+          reg_number?: string
+          section?: string
+          session_id?: string | null
+          surname?: string
+          year_of_entry?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           class: string
@@ -106,9 +204,10 @@ export type Database = {
           id: string
           is_new_intake: boolean
           middle_name: string | null
-          parent_phone: string
+          previous_class: string | null
           reg_number: string
           section: Database["public"]["Enums"]["section_type"]
+          session_id: string | null
           surname: string
           updated_at: string
           user_id: string
@@ -121,9 +220,10 @@ export type Database = {
           id?: string
           is_new_intake?: boolean
           middle_name?: string | null
-          parent_phone: string
+          previous_class?: string | null
           reg_number: string
           section: Database["public"]["Enums"]["section_type"]
+          session_id?: string | null
           surname: string
           updated_at?: string
           user_id: string
@@ -136,15 +236,24 @@ export type Database = {
           id?: string
           is_new_intake?: boolean
           middle_name?: string | null
-          parent_phone?: string
+          previous_class?: string | null
           reg_number?: string
           section?: Database["public"]["Enums"]["section_type"]
+          session_id?: string | null
           surname?: string
           updated_at?: string
           user_id?: string
           year_of_entry?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "students_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       terms: {
         Row: {
@@ -226,7 +335,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "super_admin" | "bursar" | "staff"
+      app_role: "super_admin" | "bursar" | "staff" | "bursary"
       section_type: "primary" | "secondary"
       term_type: "1st" | "2nd" | "3rd"
     }
@@ -356,7 +465,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "bursar", "staff"],
+      app_role: ["super_admin", "bursar", "staff", "bursary"],
       section_type: ["primary", "secondary"],
       term_type: ["1st", "2nd", "3rd"],
     },
