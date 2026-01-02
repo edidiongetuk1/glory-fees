@@ -1,11 +1,4 @@
-export type UserRole = 'super_admin' | 'bursar' | 'staff';
-
-export interface User {
-  id: string;
-  username: string;
-  role: UserRole;
-  name: string;
-}
+// User types are now in AuthContext.tsx
 
 export type Section = 'primary' | 'secondary';
 
