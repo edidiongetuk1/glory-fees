@@ -68,7 +68,7 @@ export default function Students() {
         )
       : [];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!firstName.trim() || !surname.trim() || !formClass || !parentPhone.trim()) {
@@ -80,7 +80,7 @@ export default function Students() {
       return;
     }
 
-    const newStudent = addStudent({
+    const newStudent = await addStudent({
       firstName: firstName.trim(),
       middleName: middleName.trim() || undefined,
       surname: surname.trim(),
@@ -91,10 +91,12 @@ export default function Students() {
       isNewIntake,
     });
 
-    toast({
-      title: 'Student Registered',
-      description: `${newStudent.firstName} ${newStudent.surname} has been registered with ID: ${newStudent.regNumber}`,
-    });
+    if (newStudent) {
+      toast({
+        title: 'Student Registered',
+        description: `${newStudent.firstName} ${newStudent.surname} has been registered with ID: ${newStudent.regNumber}`,
+      });
+    }
 
     // Reset form
     setFirstName('');
