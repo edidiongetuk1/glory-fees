@@ -133,7 +133,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
           sessionId: t.session_id,
           term: t.term as Term,
           isActive: t.is_active,
-          fees: (t.fees as FeeStructure[]) || generateDefaultFees(),
+          fees: (t.fees as unknown as FeeStructure[]) || generateDefaultFees(),
         })));
       }
 
@@ -244,7 +244,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         session_id: sessionId,
         term,
         is_active: false,
-        fees: generateDefaultFees(),
+        fees: JSON.parse(JSON.stringify(generateDefaultFees())),
       })
       .select()
       .single();
@@ -255,7 +255,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         sessionId: data.session_id,
         term: data.term as Term,
         isActive: data.is_active,
-        fees: (data.fees as FeeStructure[]) || generateDefaultFees(),
+        fees: (data.fees as unknown as FeeStructure[]) || generateDefaultFees(),
       }]);
     }
   }, [session?.user]);
@@ -285,7 +285,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
 
     await supabase
       .from('terms')
-      .update({ fees })
+      .update({ fees: JSON.parse(JSON.stringify(fees)) })
       .eq('id', termId);
 
     setTerms(prev =>
