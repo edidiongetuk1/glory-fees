@@ -1,6 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import {
   Student,
   AcademicSession,
@@ -20,27 +18,27 @@ interface SchoolContextType {
   // Sessions
   sessions: AcademicSession[];
   activeSession: AcademicSession | null;
-  createSession: (name: string, startYear: number, endYear: number) => Promise<void>;
-  setActiveSession: (sessionId: string) => Promise<void>;
+  createSession: (name: string, startYear: number, endYear: number) => void;
+  setActiveSession: (sessionId: string) => void;
 
   // Terms
   terms: TermConfig[];
   activeTerm: TermConfig | null;
-  createTerm: (sessionId: string, term: Term) => Promise<void>;
-  setActiveTerm: (termId: string) => Promise<void>;
-  updateTermFees: (termId: string, fees: FeeStructure[]) => Promise<void>;
+  createTerm: (sessionId: string, term: Term) => void;
+  setActiveTerm: (termId: string) => void;
+  updateTermFees: (termId: string, fees: FeeStructure[]) => void;
 
   // Students
   students: Student[];
   recentStudents: Student[];
-  addStudent: (student: Omit<Student, 'id' | 'regNumber' | 'createdAt'>) => Promise<Student>;
+  addStudent: (student: Omit<Student, 'id' | 'regNumber' | 'createdAt'>) => Student;
   getStudentsByClass: (classValue: SchoolClass) => Student[];
   searchStudents: (query: string) => Student[];
   getStudentFee: (student: Student) => number;
 
   // Payments
   payments: Payment[];
-  addPayment: (payment: Omit<Payment, 'id' | 'transactionId' | 'createdAt'>) => Promise<Payment>;
+  addPayment: (payment: Omit<Payment, 'id' | 'transactionId' | 'createdAt'>) => Payment;
   getStudentPayments: (studentId: string) => Payment[];
   getStudentBalance: (studentId: string) => number;
 
@@ -48,13 +46,57 @@ interface SchoolContextType {
   getTotalExpectedRevenue: () => number;
   getTotalCollected: () => number;
   getDebtorsByClass: () => Record<SchoolClass, Student[]>;
-
-  // Loading state
-  isLoading: boolean;
-  refreshData: () => Promise<void>;
 }
 
 const SchoolContext = createContext<SchoolContextType | undefined>(undefined);
+
+// Generate initial mock data
+function generateMockStudents(): Student[] {
+  const students: Student[] = [];
+  const names = [
+    { first: 'Chidi', middle: 'Emmanuel', surname: 'Okafor' },
+    { first: 'Amara', middle: 'Grace', surname: 'Eze' },
+    { first: 'Oluwaseun', middle: 'David', surname: 'Adeyemi' },
+    { first: 'Fatima', middle: 'Aisha', surname: 'Mohammed' },
+    { first: 'Tunde', middle: 'Kayode', surname: 'Bakare' },
+    { first: 'Ngozi', middle: 'Blessing', surname: 'Nwosu' },
+    { first: 'Emeka', middle: 'Victor', surname: 'Okwu' },
+    { first: 'Zainab', middle: 'Halima', surname: 'Yusuf' },
+    { first: 'Adaeze', middle: 'Chioma', surname: 'Igwe' },
+    { first: 'Babatunde', middle: 'Olumide', surname: 'Ogundimu' },
+  ];
+
+  const allClasses = [...PRIMARY_CLASSES, ...SECONDARY_CLASSES];
+  let primarySerial = 1;
+  let secondarySerial = 1;
+
+  allClasses.forEach((classItem, classIndex) => {
+    const numStudents = Math.floor(Math.random() * 3) + 2;
+    for (let i = 0; i < numStudents; i++) {
+      const nameIndex = (classIndex * 3 + i) % names.length;
+      const section: Section = PRIMARY_CLASSES.some(c => c.value === classItem.value) ? 'primary' : 'secondary';
+      const isNew = Math.random() > 0.6;
+      const yearOfEntry = isNew ? '25' : '24';
+      const serial = section === 'primary' ? primarySerial++ : secondarySerial++;
+
+      students.push({
+        id: `student-${classIndex}-${i}`,
+        regNumber: generateRegNumber(section, yearOfEntry, serial),
+        firstName: names[nameIndex].first,
+        middleName: names[nameIndex].middle,
+        surname: names[nameIndex].surname,
+        section,
+        class: classItem.value,
+        parentPhone: `080${Math.floor(10000000 + Math.random() * 90000000)}`,
+        yearOfEntry,
+        isNewIntake: isNew,
+        createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+      });
+    }
+  });
+
+  return students;
+}
 
 function generateDefaultFees(): FeeStructure[] {
   const fees: FeeStructure[] = [];
@@ -83,12 +125,22 @@ function generateDefaultFees(): FeeStructure[] {
 }
 
 export function SchoolProvider({ children }: { children: React.ReactNode }) {
-  const { user, session } = useAuth();
-  const [sessions, setSessions] = useState<AcademicSession[]>([]);
-  const [terms, setTerms] = useState<TermConfig[]>([]);
+  const [sessions, setSessions] = useState<AcademicSession[]>([
+    { id: 'session-2024-2025', name: '2024/2025 Session', startYear: 2024, endYear: 2025, isActive: true },
+  ]);
+
+  const [terms, setTerms] = useState<TermConfig[]>([
+    {
+      id: 'term-2024-2025-1',
+      sessionId: 'session-2024-2025',
+      term: '1st',
+      isActive: true,
+      fees: generateDefaultFees(),
+    },
+  ]);
+
   const [students, setStudents] = useState<Student[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   const activeSession = sessions.find(s => s.isActive) || null;
   const activeTerm = terms.find(t => t.isActive) || null;
@@ -96,248 +148,63 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(0, 10);
 
-  // Fetch all data from database
-  const refreshData = useCallback(async () => {
-    if (!session?.user) {
-      setIsLoading(false);
-      return;
-    }
+  const createSession = useCallback((name: string, startYear: number, endYear: number) => {
+    const newSession: AcademicSession = {
+      id: `session-${startYear}-${endYear}`,
+      name,
+      startYear,
+      endYear,
+      isActive: false,
+    };
+    setSessions(prev => [...prev, newSession]);
+  }, []);
 
-    setIsLoading(true);
-    try {
-      // Fetch sessions
-      const { data: sessionsData } = await supabase
-        .from('academic_sessions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (sessionsData) {
-        setSessions(sessionsData.map(s => ({
-          id: s.id,
-          name: s.name,
-          startYear: s.start_year,
-          endYear: s.end_year,
-          isActive: s.is_active,
-        })));
-      }
-
-      // Fetch terms
-      const { data: termsData } = await supabase
-        .from('terms')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (termsData) {
-        setTerms(termsData.map(t => ({
-          id: t.id,
-          sessionId: t.session_id,
-          term: t.term as Term,
-          isActive: t.is_active,
-          fees: (t.fees as unknown as FeeStructure[]) || generateDefaultFees(),
-        })));
-      }
-
-      // Fetch students
-      const { data: studentsData } = await supabase
-        .from('students')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (studentsData) {
-        setStudents(studentsData.map(s => ({
-          id: s.id,
-          regNumber: s.reg_number,
-          firstName: s.first_name,
-          middleName: s.middle_name || undefined,
-          surname: s.surname,
-          section: s.section as Section,
-          class: s.class as SchoolClass,
-          parentPhone: s.parent_phone,
-          yearOfEntry: s.year_of_entry,
-          isNewIntake: s.is_new_intake,
-          createdAt: new Date(s.created_at),
-        })));
-      }
-
-      // Fetch payments
-      const { data: paymentsData } = await supabase
-        .from('payments')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (paymentsData) {
-        setPayments(paymentsData.map(p => ({
-          id: p.id,
-          studentId: p.student_id,
-          termId: p.term_id,
-          transactionId: p.transaction_id,
-          amountPaid: Number(p.amount_paid),
-          paymentMethod: p.payment_method as 'cash' | 'transfer' | 'pos',
-          notes: p.notes || undefined,
-          createdAt: new Date(p.created_at),
-        })));
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [session?.user]);
-
-  useEffect(() => {
-    refreshData();
-  }, [refreshData]);
-
-  const createSession = useCallback(async (name: string, startYear: number, endYear: number) => {
-    if (!session?.user) return;
-
-    const { data, error } = await supabase
-      .from('academic_sessions')
-      .insert({
-        user_id: session.user.id,
-        name,
-        start_year: startYear,
-        end_year: endYear,
-        is_active: false,
-      })
-      .select()
-      .single();
-
-    if (data && !error) {
-      setSessions(prev => [...prev, {
-        id: data.id,
-        name: data.name,
-        startYear: data.start_year,
-        endYear: data.end_year,
-        isActive: data.is_active,
-      }]);
-    }
-  }, [session?.user]);
-
-  const setActiveSession = useCallback(async (sessionId: string) => {
-    if (!session?.user) return;
-
-    // Deactivate all sessions first
-    await supabase
-      .from('academic_sessions')
-      .update({ is_active: false })
-      .eq('user_id', session.user.id);
-
-    // Activate the selected session
-    await supabase
-      .from('academic_sessions')
-      .update({ is_active: true })
-      .eq('id', sessionId);
-
+  const setActiveSession = useCallback((sessionId: string) => {
     setSessions(prev =>
       prev.map(s => ({ ...s, isActive: s.id === sessionId }))
     );
-  }, [session?.user]);
+  }, []);
 
-  const createTerm = useCallback(async (sessionId: string, term: Term) => {
-    if (!session?.user) return;
+  const createTerm = useCallback((sessionId: string, term: Term) => {
+    const newTerm: TermConfig = {
+      id: `term-${sessionId}-${term}`,
+      sessionId,
+      term,
+      isActive: false,
+      fees: generateDefaultFees(),
+    };
+    setTerms(prev => [...prev, newTerm]);
+  }, []);
 
-    const { data, error } = await supabase
-      .from('terms')
-      .insert({
-        user_id: session.user.id,
-        session_id: sessionId,
-        term,
-        is_active: false,
-        fees: JSON.parse(JSON.stringify(generateDefaultFees())),
-      })
-      .select()
-      .single();
-
-    if (data && !error) {
-      setTerms(prev => [...prev, {
-        id: data.id,
-        sessionId: data.session_id,
-        term: data.term as Term,
-        isActive: data.is_active,
-        fees: (data.fees as unknown as FeeStructure[]) || generateDefaultFees(),
-      }]);
-    }
-  }, [session?.user]);
-
-  const setActiveTerm = useCallback(async (termId: string) => {
-    if (!session?.user) return;
-
-    // Deactivate all terms first
-    await supabase
-      .from('terms')
-      .update({ is_active: false })
-      .eq('user_id', session.user.id);
-
-    // Activate the selected term
-    await supabase
-      .from('terms')
-      .update({ is_active: true })
-      .eq('id', termId);
-
+  const setActiveTerm = useCallback((termId: string) => {
     setTerms(prev =>
       prev.map(t => ({ ...t, isActive: t.id === termId }))
     );
-  }, [session?.user]);
+  }, []);
 
-  const updateTermFees = useCallback(async (termId: string, fees: FeeStructure[]) => {
-    if (!session?.user) return;
-
-    await supabase
-      .from('terms')
-      .update({ fees: JSON.parse(JSON.stringify(fees)) })
-      .eq('id', termId);
-
+  const updateTermFees = useCallback((termId: string, fees: FeeStructure[]) => {
     setTerms(prev =>
       prev.map(t => (t.id === termId ? { ...t, fees } : t))
     );
-  }, [session?.user]);
+  }, []);
 
-  const addStudent = useCallback(async (studentData: Omit<Student, 'id' | 'regNumber' | 'createdAt'>): Promise<Student> => {
-    if (!session?.user) throw new Error('Not authenticated');
-
+  const addStudent = useCallback((studentData: Omit<Student, 'id' | 'regNumber' | 'createdAt'>): Student => {
     const existingStudents = students.filter(
       s => s.section === studentData.section && s.yearOfEntry === studentData.yearOfEntry
     );
     const serial = existingStudents.length + 1;
     const regNumber = generateRegNumber(studentData.section, studentData.yearOfEntry, serial);
 
-    const { data, error } = await supabase
-      .from('students')
-      .insert({
-        user_id: session.user.id,
-        reg_number: regNumber,
-        first_name: studentData.firstName,
-        middle_name: studentData.middleName || null,
-        surname: studentData.surname,
-        section: studentData.section,
-        class: studentData.class,
-        parent_phone: studentData.parentPhone,
-        year_of_entry: studentData.yearOfEntry,
-        is_new_intake: studentData.isNewIntake,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
     const newStudent: Student = {
-      id: data.id,
-      regNumber: data.reg_number,
-      firstName: data.first_name,
-      middleName: data.middle_name || undefined,
-      surname: data.surname,
-      section: data.section as Section,
-      class: data.class as SchoolClass,
-      parentPhone: data.parent_phone,
-      yearOfEntry: data.year_of_entry,
-      isNewIntake: data.is_new_intake,
-      createdAt: new Date(data.created_at),
+      ...studentData,
+      id: `student-${Date.now()}`,
+      regNumber,
+      createdAt: new Date(),
     };
 
-    setStudents(prev => [newStudent, ...prev]);
+    setStudents(prev => [...prev, newStudent]);
     return newStudent;
-  }, [session?.user, students]);
+  }, [students]);
 
   const getStudentsByClass = useCallback((classValue: SchoolClass): Student[] => {
     return students.filter(s => s.class === classValue);
@@ -360,41 +227,17 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
     return student.isNewIntake ? feeConfig.newIntakeFee : feeConfig.returningFee;
   }, [activeTerm]);
 
-  const addPayment = useCallback(async (paymentData: Omit<Payment, 'id' | 'transactionId' | 'createdAt'>): Promise<Payment> => {
-    if (!session?.user) throw new Error('Not authenticated');
-
-    const transactionId = generateTransactionId();
-
-    const { data, error } = await supabase
-      .from('payments')
-      .insert({
-        user_id: session.user.id,
-        student_id: paymentData.studentId,
-        term_id: paymentData.termId,
-        transaction_id: transactionId,
-        amount_paid: paymentData.amountPaid,
-        payment_method: paymentData.paymentMethod,
-        notes: paymentData.notes || null,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
+  const addPayment = useCallback((paymentData: Omit<Payment, 'id' | 'transactionId' | 'createdAt'>): Payment => {
     const newPayment: Payment = {
-      id: data.id,
-      studentId: data.student_id,
-      termId: data.term_id,
-      transactionId: data.transaction_id,
-      amountPaid: Number(data.amount_paid),
-      paymentMethod: data.payment_method as 'cash' | 'transfer' | 'pos',
-      notes: data.notes || undefined,
-      createdAt: new Date(data.created_at),
+      ...paymentData,
+      id: `payment-${Date.now()}`,
+      transactionId: generateTransactionId(),
+      createdAt: new Date(),
     };
 
-    setPayments(prev => [newPayment, ...prev]);
+    setPayments(prev => [...prev, newPayment]);
     return newPayment;
-  }, [session?.user]);
+  }, []);
 
   const getStudentPayments = useCallback((studentId: string): Payment[] => {
     return payments.filter(p => p.studentId === studentId);
@@ -464,8 +307,6 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         getTotalExpectedRevenue,
         getTotalCollected,
         getDebtorsByClass,
-        isLoading,
-        refreshData,
       }}
     >
       {children}

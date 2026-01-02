@@ -68,7 +68,7 @@ export default function Students() {
         )
       : [];
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!firstName.trim() || !surname.trim() || !formClass || !parentPhone.trim()) {
@@ -80,30 +80,21 @@ export default function Students() {
       return;
     }
 
-    try {
-      const newStudent = await addStudent({
-        firstName: firstName.trim(),
-        middleName: middleName.trim() || undefined,
-        surname: surname.trim(),
-        section: formSection,
-        class: formClass,
-        parentPhone: parentPhone.trim(),
-        yearOfEntry,
-        isNewIntake,
-      });
+    const newStudent = addStudent({
+      firstName: firstName.trim(),
+      middleName: middleName.trim() || undefined,
+      surname: surname.trim(),
+      section: formSection,
+      class: formClass,
+      parentPhone: parentPhone.trim(),
+      yearOfEntry,
+      isNewIntake,
+    });
 
-      toast({
-        title: 'Student Registered',
-        description: `${newStudent.firstName} ${newStudent.surname} has been registered with ID: ${newStudent.regNumber}`,
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to register student',
-        variant: 'destructive',
-      });
-      return;
-    }
+    toast({
+      title: 'Student Registered',
+      description: `${newStudent.firstName} ${newStudent.surname} has been registered with ID: ${newStudent.regNumber}`,
+    });
 
     // Reset form
     setFirstName('');

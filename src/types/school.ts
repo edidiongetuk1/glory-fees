@@ -76,10 +76,13 @@ export interface Payment {
   transactionId: string;
   studentId: string;
   student?: Student;
+  sessionId: string;
   termId: string;
   amountPaid: number;
+  feePayable: number;
+  outstandingBalance: number;
   paymentMethod: PaymentMethod;
-  notes?: string;
+  receivedBy: string;
   createdAt: Date;
 }
 

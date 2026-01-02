@@ -65,7 +65,7 @@ export default function Payments() {
     setLastReceipt(null);
   };
 
-  const handlePayment = async () => {
+  const handlePayment = () => {
     if (!selectedStudent || !amountPaid || !activeTerm || !activeSession) {
       toast({
         title: 'Error',
@@ -89,36 +89,31 @@ export default function Payments() {
     const currentBalance = getStudentBalance(selectedStudent.id);
     const newBalance = currentBalance - amount;
 
-    try {
-      const payment = await addPayment({
-        studentId: selectedStudent.id,
-        termId: activeTerm.id,
-        amountPaid: amount,
-        paymentMethod,
-      });
+    const payment = addPayment({
+      studentId: selectedStudent.id,
+      student: selectedStudent,
+      sessionId: activeSession.id,
+      termId: activeTerm.id,
+      amountPaid: amount,
+      feePayable,
+      outstandingBalance: Math.max(0, newBalance),
+      paymentMethod,
+      receivedBy: user?.name || 'Unknown',
+    });
 
-      setLastReceipt({
-        ...payment,
-        student: selectedStudent,
-        session: activeSession,
-        term: activeTerm,
-        feePayable,
-        outstandingBalance: Math.max(0, newBalance),
-      });
+    setLastReceipt({
+      ...payment,
+      student: selectedStudent,
+      session: activeSession,
+      term: activeTerm,
+    });
 
-      toast({
-        title: 'Payment Recorded',
-        description: `Payment of ${formatCurrency(amount)} received successfully`,
-      });
+    toast({
+      title: 'Payment Recorded',
+      description: `Payment of ${formatCurrency(amount)} received successfully`,
+    });
 
-      setAmountPaid('');
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to record payment',
-        variant: 'destructive',
-      });
-    }
+    setAmountPaid('');
   };
 
   const handlePrint = () => {
