@@ -34,12 +34,20 @@ import {
 export default function Reports() {
   const {
     students,
+    payments,
     getDebtorsByClass,
     getTotalExpectedRevenue,
     getTotalCollected,
     getStudentFee,
     getStudentBalance,
   } = useSchool();
+
+  // Helper to get total paid for a student
+  const getStudentPaid = (studentId: string) => {
+    return payments
+      .filter(p => p.studentId === studentId)
+      .reduce((sum, p) => sum + p.amountPaid, 0);
+  };
   const [activeTab, setActiveTab] = useState('debtors');
 
   const debtorsByClass = getDebtorsByClass();
@@ -81,13 +89,14 @@ export default function Reports() {
 
   const downloadReport = (section: 'primary' | 'secondary') => {
     const debtors = section === 'primary' ? primaryDebtors : secondaryDebtors;
-    let csv = 'Class,Reg Number,Name,Fee Payable,Balance\n';
+    let csv = 'Class,Reg Number,Name,Fee Payable,Amount Paid,Balance\n';
     
     debtors.forEach(({ class: c, students: debtorStudents }) => {
       debtorStudents.forEach(student => {
         const fee = getStudentFee(student);
+        const paid = getStudentPaid(student.id);
         const balance = getStudentBalance(student.id);
-        csv += `"${c.label}","${student.regNumber}","${student.firstName} ${student.surname}",${fee},${balance}\n`;
+        csv += `"${c.label}","${student.regNumber}","${student.firstName} ${student.surname}",${fee},${paid},${balance}\n`;
       });
     });
 
@@ -212,6 +221,12 @@ export default function Reports() {
                                 <p className="text-xs text-muted-foreground">{student.regNumber}</p>
                               </div>
                               <div className="text-right">
+                                <p className="font-semibold text-success">
+                                  {formatCurrency(getStudentPaid(student.id))}
+                                </p>
+                                <p className="text-xs text-muted-foreground">paid</p>
+                              </div>
+                              <div className="text-right">
                                 <p className="font-semibold text-warning">
                                   {formatCurrency(getStudentBalance(student.id))}
                                 </p>
@@ -266,6 +281,12 @@ export default function Reports() {
                                   {student.firstName} {student.surname}
                                 </p>
                                 <p className="text-xs text-muted-foreground">{student.regNumber}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold text-success">
+                                  {formatCurrency(getStudentPaid(student.id))}
+                                </p>
+                                <p className="text-xs text-muted-foreground">paid</p>
                               </div>
                               <div className="text-right">
                                 <p className="font-semibold text-warning">
