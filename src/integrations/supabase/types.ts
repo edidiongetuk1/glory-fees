@@ -94,39 +94,87 @@ export type Database = {
           },
         ]
       }
+      payment_audit: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          new_amount: number | null
+          new_method: string | null
+          payment_id: string
+          performed_by: string
+          previous_amount: number | null
+          previous_method: string | null
+          reason: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          new_amount?: number | null
+          new_method?: string | null
+          payment_id: string
+          performed_by: string
+          previous_amount?: number | null
+          previous_method?: string | null
+          reason: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          new_amount?: number | null
+          new_method?: string | null
+          payment_id?: string
+          performed_by?: string
+          previous_amount?: number | null
+          previous_method?: string | null
+          reason?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount_paid: number
           created_at: string
           id: string
+          is_voided: boolean
           notes: string | null
           payment_method: string
           student_id: string
           term_id: string
           transaction_id: string
           user_id: string
+          voided_at: string | null
+          voided_by: string | null
         }
         Insert: {
           amount_paid: number
           created_at?: string
           id?: string
+          is_voided?: boolean
           notes?: string | null
           payment_method: string
           student_id: string
           term_id: string
           transaction_id: string
           user_id: string
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Update: {
           amount_paid?: number
           created_at?: string
           id?: string
+          is_voided?: boolean
           notes?: string | null
           payment_method?: string
           student_id?: string
           term_id?: string
           transaction_id?: string
           user_id?: string
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Relationships: [
           {

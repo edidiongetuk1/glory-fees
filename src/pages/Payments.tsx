@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import PaymentHistory from '@/components/payments/PaymentHistory';
 import { usePageMeta } from '@/hooks/use-page-meta';
 import {
   Student,
@@ -44,6 +45,7 @@ export default function Payments() {
     searchStudents,
     getStudentFee,
     getStudentBalance,
+    getStudentPayments,
     addPayment,
     activeTerm,
     activeSession,
@@ -508,6 +510,14 @@ export default function Payments() {
                   </p>
                 </div>
               </Card>
+            )}
+
+            {/* Payment History for selected student */}
+            {selectedStudent && (
+              <PaymentHistory
+                payments={getStudentPayments(selectedStudent.id)}
+                onPaymentUpdated={refreshData}
+              />
             )}
           </div>
         </div>
