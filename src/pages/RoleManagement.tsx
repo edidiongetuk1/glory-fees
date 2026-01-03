@@ -5,7 +5,6 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Shield, UserCog, Loader2 } from 'lucide-react';
@@ -185,15 +184,15 @@ export default function RoleManagement() {
           </Card>
         </div>
 
-        {/* Users Table */}
+        {/* Users List */}
         <Card>
-          <CardHeader>
-            <CardTitle>Users</CardTitle>
-            <CardDescription>
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg">Users</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Manage role assignments for all registered users
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 sm:p-6">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -203,53 +202,48 @@ export default function RoleManagement() {
                 No users found
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User ID</TableHead>
-                    <TableHead>Current Role</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-mono text-sm">
+              <div className="space-y-3">
+                {users.map((user) => (
+                  <div key={user.id} className="p-3 sm:p-4 border rounded-lg bg-card mx-3 sm:mx-0">
+                    {/* Header: User ID + Badge */}
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="font-mono text-xs text-muted-foreground truncate">
                         {user.id.slice(0, 8)}...
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getRoleBadgeVariant(user.role)}>
-                          {getRoleDisplayName(user.role)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Select
-                          value={user.role}
-                          onValueChange={(value: UserRole) => updateUserRole(user.id, value)}
-                          disabled={updating === user.id}
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            {updating === user.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <SelectValue />
-                            )}
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="super_admin">Super Admin</SelectItem>
-                            <SelectItem value="bursary">Bursary</SelectItem>
-                            <SelectItem value="staff">Staff</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </span>
+                      <Badge variant={getRoleBadgeVariant(user.role)} className="text-xs flex-shrink-0">
+                        {getRoleDisplayName(user.role)}
+                      </Badge>
+                    </div>
+
+                    {/* Joined date */}
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Joined: {new Date(user.created_at).toLocaleDateString()}
+                    </p>
+
+                    {/* Role selector */}
+                    <div className="pt-2 border-t">
+                      <Select
+                        value={user.role}
+                        onValueChange={(value: UserRole) => updateUserRole(user.id, value)}
+                        disabled={updating === user.id}
+                      >
+                        <SelectTrigger className="w-full">
+                          {updating === user.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <SelectValue />
+                          )}
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="super_admin">Super Admin</SelectItem>
+                          <SelectItem value="bursary">Bursary</SelectItem>
+                          <SelectItem value="staff">Staff</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>

@@ -5,7 +5,6 @@ import { usePageMeta } from '@/hooks/use-page-meta';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Search, FileText } from 'lucide-react';
 import { formatCurrency, getClassLabel, ALL_CLASSES } from '@/types/school';
@@ -190,55 +189,56 @@ export default function Records() {
           </CardContent>
         </Card>
 
-        {/* Records Table */}
+        {/* Records List */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg">
               Payment Records ({sortedRecords.length} students)
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 sm:p-6">
             {sortedRecords.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
                 <p className="text-muted-foreground">No records found</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Reg Number</TableHead>
-                      <TableHead>Student Name</TableHead>
-                      <TableHead>Class</TableHead>
-                      <TableHead className="text-right">Fee Payable</TableHead>
-                      <TableHead className="text-right">Amount Paid</TableHead>
-                      <TableHead className="text-right">Balance</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sortedRecords.map((record) => (
-                      <TableRow key={record.id}>
-                        <TableCell className="font-medium">{record.regNumber}</TableCell>
-                        <TableCell>
+              <div className="space-y-2 sm:space-y-3">
+                {sortedRecords.map((record) => (
+                  <div 
+                    key={record.id} 
+                    className="p-3 sm:p-4 border rounded-lg bg-card mx-3 sm:mx-0"
+                  >
+                    {/* Header: Name + Status */}
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm truncate">
                           {record.surname} {record.firstName} {record.middleName || ''}
-                        </TableCell>
-                        <TableCell>{getClassLabel(record.class)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(record.feePayable)}</TableCell>
-                        <TableCell className="text-right text-green-600">
-                          {formatCurrency(record.totalPaid)}
-                        </TableCell>
-                        <TableCell className="text-right text-red-600">
-                          {formatCurrency(record.amountRemaining)}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {getStatusBadge(record.paymentStatus)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {record.regNumber} • {getClassLabel(record.class)}
+                        </p>
+                      </div>
+                      {getStatusBadge(record.paymentStatus)}
+                    </div>
+
+                    {/* Payment info */}
+                    <div className="grid grid-cols-3 gap-2 text-sm pt-2 border-t">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Fee</p>
+                        <p className="font-medium">{formatCurrency(record.feePayable)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Paid</p>
+                        <p className="font-medium text-success">{formatCurrency(record.totalPaid)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Balance</p>
+                        <p className="font-medium text-destructive">{formatCurrency(record.amountRemaining)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
