@@ -58,6 +58,8 @@ import {
   Loader2,
   UserCog,
   Shield,
+  Trash2,
+  Pencil,
 } from 'lucide-react';
 
 interface UserWithRole {
@@ -72,6 +74,8 @@ export default function Settings() {
     sessions,
     activeSession,
     createSession,
+    updateSession,
+    deleteSession,
     setActiveSession,
     terms,
     activeTerm,
@@ -89,6 +93,11 @@ export default function Settings() {
   const [isSessionDialogOpen, setIsSessionDialogOpen] = useState(false);
   const [editingFees, setEditingFees] = useState<FeeStructure[] | null>(null);
   const [isPromoting, setIsPromoting] = useState(false);
+  
+  // Edit session state
+  const [editingSession, setEditingSession] = useState<{ id: string; name: string; startYear: number; endYear: number } | null>(null);
+  const [isEditSessionDialogOpen, setIsEditSessionDialogOpen] = useState(false);
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
   
   // Role management state
   const [users, setUsers] = useState<UserWithRole[]>([]);
@@ -210,6 +219,40 @@ export default function Settings() {
     });
     setNewSessionName('');
     setIsSessionDialogOpen(false);
+  };
+
+  const handleEditSession = (session: { id: string; name: string; startYear: number; endYear: number }) => {
+    setEditingSession({ ...session });
+    setIsEditSessionDialogOpen(true);
+  };
+
+  const handleUpdateSession = async () => {
+    if (!editingSession || !editingSession.name.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a session name',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const success = await updateSession(
+      editingSession.id,
+      editingSession.name,
+      editingSession.startYear,
+      editingSession.endYear
+    );
+    
+    if (success) {
+      setEditingSession(null);
+      setIsEditSessionDialogOpen(false);
+    }
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    setDeletingSessionId(sessionId);
+    await deleteSession(sessionId);
+    setDeletingSessionId(null);
   };
 
   const handleCreateTerm = (term: Term) => {
@@ -353,31 +396,140 @@ export default function Settings() {
               
               {/* Session List */}
               {sessions.map((session) => (
-                <button
+                <div
                   key={session.id}
-                  onClick={() => setActiveSession(session.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all text-left ${
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
                     activeSession?.id === session.id
                       ? 'bg-primary/10 border-2 border-primary'
                       : 'bg-muted/50 border-2 border-transparent hover:bg-muted'
                   }`}
                 >
-                  <FolderOpen className={`w-6 h-6 ${
-                    activeSession?.id === session.id ? 'text-primary' : 'text-secondary'
-                  }`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{session.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {session.startYear} - {session.endYear}
-                    </p>
+                  <button
+                    onClick={() => setActiveSession(session.id)}
+                    className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                  >
+                    <FolderOpen className={`w-6 h-6 flex-shrink-0 ${
+                      activeSession?.id === session.id ? 'text-primary' : 'text-secondary'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{session.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {session.startYear} - {session.endYear}
+                      </p>
+                    </div>
+                    {activeSession?.id === session.id && (
+                      <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    )}
+                  </button>
+                  
+                  {/* Edit & Delete buttons */}
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditSession({
+                          id: session.id,
+                          name: session.name,
+                          startYear: session.startYear,
+                          endYear: session.endYear,
+                        });
+                      }}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {deletingSessionId === session.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3.5 h-3.5" />
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Session?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete "{session.name}" and all associated terms. 
+                            This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteSession(session.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
-                  {activeSession?.id === session.id && (
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                  )}
-                </button>
+                </div>
               ))}
             </CardContent>
           </Card>
+
+          {/* Edit Session Dialog */}
+          <Dialog open={isEditSessionDialogOpen} onOpenChange={setIsEditSessionDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Session</DialogTitle>
+                <DialogDescription>
+                  Update academic year session details
+                </DialogDescription>
+              </DialogHeader>
+              {editingSession && (
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Session Name</Label>
+                    <Input
+                      value={editingSession.name}
+                      onChange={(e) => setEditingSession({ ...editingSession, name: e.target.value })}
+                      placeholder="e.g., 2025/2026 Session"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Start Year</Label>
+                      <Input
+                        type="number"
+                        value={editingSession.startYear}
+                        onChange={(e) => setEditingSession({ ...editingSession, startYear: parseInt(e.target.value) })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>End Year</Label>
+                      <Input
+                        type="number"
+                        value={editingSession.endYear}
+                        onChange={(e) => setEditingSession({ ...editingSession, endYear: parseInt(e.target.value) })}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setIsEditSessionDialogOpen(false)} className="flex-1">
+                      Cancel
+                    </Button>
+                    <Button onClick={handleUpdateSession} className="flex-1">
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Terms Column */}
           <Card>
