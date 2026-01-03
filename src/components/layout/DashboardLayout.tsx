@@ -11,6 +11,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import {
   GraduationCap,
@@ -28,6 +32,7 @@ import {
   ClipboardList,
   ClipboardCheck,
   Check,
+  Calendar,
 } from 'lucide-react';
 
 interface NavItem {
@@ -51,7 +56,7 @@ const navItems: NavItem[] = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout, hasPermission } = useAuth();
-  const { activeSession, activeTerm, terms, setActiveTerm } = useSchool();
+  const { activeSession, activeTerm, terms, setActiveTerm, sessions, setActiveSession } = useSchool();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -129,14 +134,49 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </button>
               </DropdownMenuTrigger>
             <DropdownMenuContent 
-              className="w-56 bg-popover border border-border shadow-lg z-50" 
+              className="w-64 bg-popover border border-border shadow-lg z-50" 
               align="start"
               sideOffset={4}
             >
-              <DropdownMenuLabel className="text-muted-foreground">
+              {/* Session Selection */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="flex items-center gap-2 cursor-pointer">
+                  <Calendar className="w-4 h-4" />
+                  <span>Switch Session</span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent className="bg-popover border border-border shadow-lg z-50">
+                    {sessions.length > 0 ? (
+                      sessions.map((session) => (
+                        <DropdownMenuItem
+                          key={session.id}
+                          onClick={() => setActiveSession(session.id)}
+                          className="flex items-center justify-between cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2">
+                            <FolderOpen className="w-4 h-4" />
+                            <span>{session.name}</span>
+                          </div>
+                          {activeSession?.id === session.id && (
+                            <Check className="w-4 h-4 text-primary" />
+                          )}
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <DropdownMenuItem disabled>
+                        No sessions available
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+              
+              <DropdownMenuSeparator />
+              
+              {/* Term Selection */}
+              <DropdownMenuLabel className="text-muted-foreground text-xs">
                 Select Term
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
               {sessionTerms.length > 0 ? (
                 sessionTerms.map((term) => (
                   <DropdownMenuItem

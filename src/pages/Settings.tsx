@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSchool } from '@/contexts/SchoolContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import FeeChangeRequests from '@/components/settings/FeeChangeRequests';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -777,6 +778,11 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Fee Change Requests */}
+        {activeTerm && (
+          <FeeChangeRequests />
         )}
 
         {/* Role Management - Super Admin Only */}
