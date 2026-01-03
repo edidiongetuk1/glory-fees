@@ -648,12 +648,19 @@ export default function Settings() {
                 <div>
                   <p className="font-medium">Total Students: {students.length}</p>
                   <p className="text-sm text-muted-foreground">
-                    Students will be promoted to the next class and marked as returning students.
+                    {activeTerm?.term !== '3rd' ? (
+                      <span className="text-warning">Promotion is only available at the end of 3rd Term.</span>
+                    ) : (
+                      'Students will be promoted to the next class and marked as returning students.'
+                    )}
                   </p>
                 </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="gold" disabled={isPromoting || students.length === 0}>
+                    <Button 
+                      variant="gold" 
+                      disabled={isPromoting || students.length === 0 || activeTerm?.term !== '3rd'}
+                    >
                       {isPromoting ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
