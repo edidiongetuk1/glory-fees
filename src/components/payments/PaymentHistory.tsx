@@ -23,7 +23,7 @@ interface PaymentHistoryProps {
 
 export default function PaymentHistory({ payments, onPaymentUpdated, student }: PaymentHistoryProps) {
   const { user, isSuperAdmin } = useAuth();
-  const { activeSession, activeTerm, getStudentFee } = useSchool();
+  const { activeSession, activeTerm, getStudentFee, getStudentBalance } = useSchool();
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [voidingPayment, setVoidingPayment] = useState<Payment | null>(null);
   const [editAmount, setEditAmount] = useState('');
@@ -38,6 +38,7 @@ export default function PaymentHistory({ payments, onPaymentUpdated, student }: 
     if (!student || !activeSession || !activeTerm) return;
     
     const feePayable = getStudentFee(student);
+    const outstandingBalance = getStudentBalance(student.id);
     
     const printWindow = window.open('', '', 'width=400,height=600');
     if (printWindow) {
@@ -109,7 +110,7 @@ export default function PaymentHistory({ payments, onPaymentUpdated, student }: 
               </div>
               <div class="row">
                 <span class="label">Outstanding Balance</span>
-                <span class="value ${payment.outstandingBalance > 0 ? 'text-warning' : 'text-success'}">${formatCurrency(payment.outstandingBalance)}</span>
+                <span class="value ${outstandingBalance > 0 ? 'text-warning' : 'text-success'}">${formatCurrency(outstandingBalance)}</span>
               </div>
               <div class="footer">
                 <p>Received by: ${payment.receivedBy}</p>
