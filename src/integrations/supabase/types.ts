@@ -94,6 +94,65 @@ export type Database = {
           },
         ]
       }
+      payment_approvals: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          payment_id: string
+          payment_method: string
+          requested_by: string
+          requested_by_email: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          reviewer_notes: string | null
+          status: string
+          student_id: string
+          term_id: string
+          transaction_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          payment_id: string
+          payment_method: string
+          requested_by: string
+          requested_by_email?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          student_id: string
+          term_id: string
+          transaction_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          payment_id?: string
+          payment_method?: string
+          requested_by?: string
+          requested_by_email?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          student_id?: string
+          term_id?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_approvals_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_audit: {
         Row: {
           action: string
@@ -136,6 +195,9 @@ export type Database = {
       payments: {
         Row: {
           amount_paid: number
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           id: string
           is_voided: boolean
@@ -150,6 +212,9 @@ export type Database = {
         }
         Insert: {
           amount_paid: number
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           id?: string
           is_voided?: boolean
@@ -164,6 +229,9 @@ export type Database = {
         }
         Update: {
           amount_paid?: number
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           id?: string
           is_voided?: boolean
