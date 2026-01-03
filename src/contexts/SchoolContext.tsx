@@ -183,7 +183,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
           feePayable: 0,
           outstandingBalance: 0,
           paymentMethod: p.payment_method as Payment['paymentMethod'],
-          receivedBy: '',
+          receivedBy: p.received_by || '',
           createdAt: new Date(p.created_at),
           isVoided: p.is_voided,
           approvalStatus: (p.approval_status ?? 'pending') as Payment['approvalStatus'],
@@ -683,6 +683,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
             notes: null,
             user_id: user.id,
             approval_status: 'pending',
+            received_by: paymentData.receivedBy,
           })
           .select()
           .single();
