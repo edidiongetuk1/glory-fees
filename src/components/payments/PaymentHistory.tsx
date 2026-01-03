@@ -241,101 +241,96 @@ export default function PaymentHistory({ payments, onPaymentUpdated, student }: 
             Recent payments {canEdit && '• Super admins can edit or void records'}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Transaction ID</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Receipt</TableHead>
-                  {canEdit && <TableHead className="text-right">Actions</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payments.slice(0, 10).map((payment) => {
-                  const isVoided = !!payment.isVoided;
-                  const approvalStatus = payment.approvalStatus ?? 'pending';
+        <CardContent className="p-0 sm:p-6">
+          <div className="space-y-3">
+            {payments.slice(0, 10).map((payment) => {
+              const isVoided = !!payment.isVoided;
+              const approvalStatus = payment.approvalStatus ?? 'pending';
 
-                  return (
-                    <TableRow key={payment.id} className={isVoided ? 'opacity-50' : ''}>
-                      <TableCell className="font-mono text-sm">
-                        {payment.transactionId}
-                      </TableCell>
-                      <TableCell className={isVoided ? 'line-through' : ''}>
-                        {formatCurrency(payment.amountPaid)}
-                      </TableCell>
-                      <TableCell className="capitalize">{payment.paymentMethod}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatDateTime(payment.createdAt)}
-                      </TableCell>
-                      <TableCell>
-                        {isVoided ? (
-                          <Badge variant="destructive">Voided</Badge>
-                        ) : approvalStatus === 'approved' ? (
-                          <Badge className="bg-success/10 text-success border-success">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Approved
-                          </Badge>
-                        ) : approvalStatus === 'rejected' ? (
-                          <Badge variant="destructive">
-                            <XCircle className="w-3 h-3 mr-1" />
-                            Rejected
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning">
-                            <Clock className="w-3 h-3 mr-1" />
-                            Pending
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {!isVoided && approvalStatus === 'approved' && student ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePrintReceipt(payment)}
-                          >
-                            <Download className="w-4 h-4 mr-1" />
-                            Receipt
-                          </Button>
-                        ) : approvalStatus === 'pending' ? (
-                          <span className="text-xs text-muted-foreground">Awaiting approval</span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      {canEdit && (
-                        <TableCell className="text-right">
-                          {!isVoided && (
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openEditDialog(payment)}
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive hover:text-destructive"
-                                onClick={() => setVoidingPayment(payment)}
-                              >
-                                <XCircle className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          )}
-                        </TableCell>
+              return (
+                <div 
+                  key={payment.id} 
+                  className={`p-3 sm:p-4 border rounded-lg ${isVoided ? 'opacity-50 bg-muted/30' : 'bg-card'}`}
+                >
+                  {/* Header row: Transaction ID + Status */}
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="font-mono text-xs text-muted-foreground truncate">
+                      {payment.transactionId}
+                    </span>
+                    {isVoided ? (
+                      <Badge variant="destructive" className="text-xs">Voided</Badge>
+                    ) : approvalStatus === 'approved' ? (
+                      <Badge className="bg-success/10 text-success border-success text-xs">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Approved
+                      </Badge>
+                    ) : approvalStatus === 'rejected' ? (
+                      <Badge variant="destructive" className="text-xs">
+                        <XCircle className="w-3 h-3 mr-1" />
+                        Rejected
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-warning/10 text-warning border-warning text-xs">
+                        <Clock className="w-3 h-3 mr-1" />
+                        Pending
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Amount + Method + Date */}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                    <span className={`font-semibold ${isVoided ? 'line-through' : ''}`}>
+                      {formatCurrency(payment.amountPaid)}
+                    </span>
+                    <span className="capitalize text-muted-foreground">{payment.paymentMethod}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {formatDateTime(payment.createdAt)}
+                    </span>
+                  </div>
+
+                  {/* Actions row */}
+                  <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t">
+                    <div>
+                      {!isVoided && approvalStatus === 'approved' && student ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePrintReceipt(payment)}
+                          className="h-8 text-xs"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Receipt
+                        </Button>
+                      ) : approvalStatus === 'pending' ? (
+                        <span className="text-xs text-muted-foreground">Awaiting approval</span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                    </div>
+                    {canEdit && !isVoided && (
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditDialog(payment)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          onClick={() => setVoidingPayment(payment)}
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

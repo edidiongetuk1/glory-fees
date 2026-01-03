@@ -107,26 +107,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           {/* Active Session/Term */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="w-full p-4 mx-4 mt-4 rounded-lg bg-sidebar-accent hover:bg-sidebar-accent/80 transition-colors cursor-pointer text-left">
-                <div className="flex items-center gap-2 text-sidebar-foreground/60 text-xs mb-2">
-                  <FolderOpen className="w-4 h-4" />
-                  <span>Active Session</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sidebar-foreground text-sm">
-                      {activeSession?.name || 'No Session'}
-                    </p>
-                    <p className="text-xs text-sidebar-primary">
-                      {activeTerm ? `${activeTerm.term} Term` : 'No Term Selected'}
-                    </p>
+          <div className="px-4 mt-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full p-3 rounded-lg bg-sidebar-accent hover:bg-sidebar-accent/80 transition-colors cursor-pointer text-left">
+                  <div className="flex items-center gap-2 text-sidebar-foreground/60 text-xs mb-1">
+                    <FolderOpen className="w-3 h-3" />
+                    <span>Active Session</span>
                   </div>
-                  <ChevronDown className="w-4 h-4 text-sidebar-foreground/60" />
-                </div>
-              </button>
-            </DropdownMenuTrigger>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sidebar-foreground text-sm truncate">
+                        {activeSession?.name || 'No Session'}
+                      </p>
+                      <p className="text-xs text-sidebar-primary">
+                        {activeTerm ? `${activeTerm.term} Term` : 'No Term'}
+                      </p>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-sidebar-foreground/60 flex-shrink-0" />
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
             <DropdownMenuContent 
               className="w-56 bg-popover border border-border shadow-lg z-50" 
               align="start"
@@ -155,7 +156,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownMenu>
+          </div>
 
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1">
