@@ -309,6 +309,14 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
+        // First, unlink any students from this session (set session_id to null)
+        const { error: studentsUpdateError } = await supabase
+          .from('students')
+          .update({ session_id: null })
+          .eq('session_id', sessionId);
+        
+        if (studentsUpdateError) throw studentsUpdateError;
+
         // Check if there are terms associated with this session
         const sessionTerms = terms.filter((t) => t.sessionId === sessionId);
         if (sessionTerms.length > 0) {
@@ -329,6 +337,10 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
 
         if (deleteError) throw deleteError;
 
+        // Update local students state to remove session reference
+        setStudents((prev) => prev.map((s) => 
+          s.sessionId === sessionId ? { ...s, sessionId: undefined } : s
+        ));
         setSessions((prev) => prev.filter((s) => s.id !== sessionId));
         toast({ title: 'Success', description: 'Session deleted successfully' });
         return true;
