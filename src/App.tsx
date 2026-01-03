@@ -12,7 +12,7 @@ import Payments from "./pages/Payments";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import RoleManagement from "./pages/RoleManagement";
-import Fees from "./pages/Fees";
+import Records from "./pages/Records";
 import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
@@ -33,8 +33,8 @@ function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
       <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+      <Route path="/records" element={<ProtectedRoute><Records /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-      <Route path="/fees" element={<ProtectedRoute><Fees /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="/roles" element={<ProtectedRoute><RoleManagement /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
