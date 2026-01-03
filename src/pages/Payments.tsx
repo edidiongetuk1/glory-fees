@@ -28,17 +28,11 @@ import {
   Receipt,
   User,
   GraduationCap,
-  Printer,
-  CheckCircle,
   AlertCircle,
   RefreshCw,
+  Clock,
 } from 'lucide-react';
 
-type ReceiptData = Payment & {
-  student: Student;
-  session: AcademicSession;
-  term: TermConfig;
-};
 
 export default function Payments() {
   const {
@@ -75,9 +69,7 @@ export default function Payments() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [amountPaid, setAmountPaid] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
-  const [lastReceipt, setLastReceipt] = useState<ReceiptData | null>(null);
-
-  const receiptRef = useRef<HTMLDivElement>(null);
+  const [paymentSubmitted, setPaymentSubmitted] = useState(false);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -94,7 +86,7 @@ export default function Payments() {
     setSearchQuery('');
     setSearchResults([]);
     setAmountPaid('');
-    setLastReceipt(null);
+    setPaymentSubmitted(false);
   };
 
   const handlePayment = async () => {
@@ -135,48 +127,8 @@ export default function Payments() {
 
     if (!payment) return;
 
-    setLastReceipt({
-      ...payment,
-      student: selectedStudent,
-      session: activeSession,
-      term: activeTerm,
-    });
-
-    // Toast is handled in SchoolContext now
+    setPaymentSubmitted(true);
     setAmountPaid('');
-  };
-
-  const handlePrint = () => {
-    if (receiptRef.current) {
-      const printContent = receiptRef.current.outerHTML;
-      const printWindow = window.open('', '', 'width=400,height=600');
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Payment Receipt</title>
-              <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                .receipt { max-width: 350px; margin: 0 auto; }
-                .header { text-align: center; margin-bottom: 20px; }
-                .logo { font-size: 24px; font-weight: bold; color: #1a365d; }
-                .divider { border-top: 1px dashed #ccc; margin: 15px 0; }
-                .row { display: flex; justify-content: space-between; margin: 8px 0; gap: 12px; }
-                .label { color: #666; }
-                .value { font-weight: 500; text-align: right; }
-                .text-success { color: #16a34a; }
-                .text-warning { color: #d97706; }
-                .total { font-size: 18px; font-weight: bold; margin-top: 15px; }
-                .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
-              </style>
-            </head>
-            <body>${printContent}</body>
-          </html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
-      }
-    }
   };
 
   const studentFee = selectedStudent ? getStudentFee(selectedStudent) : 0;
@@ -398,111 +350,32 @@ export default function Payments() {
             )}
           </div>
 
-          {/* Receipt Preview */}
-          <div>
-            {lastReceipt ? (
-              <Card className="animate-scale-in">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-success" />
-                      Payment Receipt
-                    </CardTitle>
-                    <CardDescription>Transaction completed successfully</CardDescription>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={handlePrint}>
-                    <Printer className="w-4 h-4 mr-2" />
-                    Print
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <div ref={receiptRef} className="receipt">
-                    <div className="header text-center pb-4 border-b border-dashed border-border">
-                      <div className="logo text-xl font-bold text-primary mb-1">
-                        Soaring Glory
-                      </div>
-                      <p className="text-sm text-muted-foreground">International Model Schools</p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {formatDateTime(lastReceipt.createdAt)}
-                      </p>
+          {/* Payment Submitted Confirmation */}
+          <div className="space-y-6">
+            {paymentSubmitted ? (
+              <Card className="animate-scale-in border-2 border-warning/30">
+                <CardContent className="py-8">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-warning/10 flex items-center justify-center">
+                      <Clock className="w-8 h-8 text-warning" />
                     </div>
-
-                    <div className="py-4 border-b border-dashed border-border space-y-2">
-                      <div className="row flex justify-between">
-                        <span className="label text-muted-foreground">Transaction ID</span>
-                        <span className="value font-mono text-sm">{lastReceipt.transactionId}</span>
-                      </div>
-                      <div className="row flex justify-between">
-                        <span className="label text-muted-foreground">Session</span>
-                        <span className="value">{lastReceipt.session.name}</span>
-                      </div>
-                      <div className="row flex justify-between">
-                        <span className="label text-muted-foreground">Term</span>
-                        <span className="value">{lastReceipt.term.term} Term</span>
-                      </div>
-                    </div>
-
-                    <div className="py-4 border-b border-dashed border-border space-y-2">
-                      <div className="row flex justify-between">
-                        <span className="label text-muted-foreground">Student Name</span>
-                        <span className="value">
-                          {lastReceipt.student.firstName} {lastReceipt.student.surname}
-                        </span>
-                      </div>
-                      <div className="row flex justify-between">
-                        <span className="label text-muted-foreground">Reg. Number</span>
-                        <span className="value font-mono">{lastReceipt.student.regNumber}</span>
-                      </div>
-                      <div className="row flex justify-between">
-                        <span className="label text-muted-foreground">Class</span>
-                        <span className="value">{getClassLabel(lastReceipt.student.class)}</span>
-                      </div>
-                    </div>
-
-                    <div className="py-4 border-b border-dashed border-border space-y-2">
-                      <div className="row flex justify-between">
-                        <span className="label text-muted-foreground">Fee Payable</span>
-                        <span className="value">{formatCurrency(lastReceipt.feePayable)}</span>
-                      </div>
-                      <div className="row flex justify-between">
-                        <span className="label text-muted-foreground">Payment Method</span>
-                        <span className="value capitalize">{lastReceipt.paymentMethod}</span>
-                      </div>
-                    </div>
-
-                    <div className="py-4 space-y-3">
-                      <div className="row flex justify-between text-lg font-bold">
-                        <span>Amount Paid</span>
-                        <span className="text-success">{formatCurrency(lastReceipt.amountPaid)}</span>
-                      </div>
-                      <div className="row flex justify-between">
-                        <span className="text-muted-foreground">Outstanding Balance</span>
-                        <span className={`font-semibold ${
-                          lastReceipt.outstandingBalance > 0 ? 'text-warning' : 'text-success'
-                        }`}>
-                          {formatCurrency(lastReceipt.outstandingBalance)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="footer text-center pt-4 border-t border-border">
-                      <p className="text-xs text-muted-foreground">
-                        Received by: {lastReceipt.receivedBy}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Thank you for your payment!
-                      </p>
-                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Payment Submitted</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Awaiting admin approval. Receipt will be available once approved.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Check the Payment History below for status updates.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
             ) : (
-              <Card className="h-full min-h-[400px] flex items-center justify-center">
+              <Card className="h-full min-h-[300px] flex items-center justify-center">
                 <div className="text-center text-muted-foreground p-8">
                   <Receipt className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                  <p className="text-lg font-medium">No Receipt Yet</p>
+                  <p className="text-lg font-medium">Ready to Process</p>
                   <p className="text-sm mt-1">
-                    Search for a student and process a payment to generate a receipt
+                    Search for a student and record their payment
                   </p>
                 </div>
               </Card>
@@ -513,6 +386,7 @@ export default function Payments() {
               <PaymentHistory
                 payments={getStudentPayments(selectedStudent.id)}
                 onPaymentUpdated={refreshData}
+                student={selectedStudent}
               />
             )}
           </div>
