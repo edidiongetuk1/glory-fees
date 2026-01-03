@@ -11,7 +11,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePageMeta } from '@/hooks/use-page-meta';
 import {
   Student,
+  Payment,
   PaymentMethod,
+  AcademicSession,
+  TermConfig,
   formatCurrency,
   formatDateTime,
   getClassLabel,
@@ -29,6 +32,12 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
+
+type ReceiptData = Payment & {
+  student: Student;
+  session: AcademicSession;
+  term: TermConfig;
+};
 
 export default function Payments() {
   const {
@@ -64,7 +73,7 @@ export default function Payments() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [amountPaid, setAmountPaid] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
-  const [lastReceipt, setLastReceipt] = useState<any>(null);
+  const [lastReceipt, setLastReceipt] = useState<ReceiptData | null>(null);
 
   const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -86,7 +95,7 @@ export default function Payments() {
     setLastReceipt(null);
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!selectedStudent || !amountPaid || !activeTerm || !activeSession) {
       toast({
         title: 'Error',
@@ -110,7 +119,7 @@ export default function Payments() {
     const currentBalance = getStudentBalance(selectedStudent.id);
     const newBalance = currentBalance - amount;
 
-    const payment = addPayment({
+    const payment = await addPayment({
       studentId: selectedStudent.id,
       student: selectedStudent,
       sessionId: activeSession.id,
@@ -121,6 +130,8 @@ export default function Payments() {
       paymentMethod,
       receivedBy: user?.name || 'Unknown',
     });
+
+    if (!payment) return;
 
     setLastReceipt({
       ...payment,
@@ -139,7 +150,7 @@ export default function Payments() {
 
   const handlePrint = () => {
     if (receiptRef.current) {
-      const printContent = receiptRef.current.innerHTML;
+      const printContent = receiptRef.current.outerHTML;
       const printWindow = window.open('', '', 'width=400,height=600');
       if (printWindow) {
         printWindow.document.write(`
@@ -152,9 +163,11 @@ export default function Payments() {
                 .header { text-align: center; margin-bottom: 20px; }
                 .logo { font-size: 24px; font-weight: bold; color: #1a365d; }
                 .divider { border-top: 1px dashed #ccc; margin: 15px 0; }
-                .row { display: flex; justify-content: space-between; margin: 8px 0; }
+                .row { display: flex; justify-content: space-between; margin: 8px 0; gap: 12px; }
                 .label { color: #666; }
-                .value { font-weight: 500; }
+                .value { font-weight: 500; text-align: right; }
+                .text-success { color: #16a34a; }
+                .text-warning { color: #d97706; }
                 .total { font-size: 18px; font-weight: bold; margin-top: 15px; }
                 .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
               </style>
