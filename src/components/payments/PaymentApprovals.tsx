@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -205,73 +204,63 @@ export default function PaymentApprovals() {
                   <p>No pending approvals</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Transaction</TableHead>
-                        <TableHead>Student</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Method</TableHead>
-                        <TableHead>Submitted By</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        {isAdmin && <TableHead className="text-right">Actions</TableHead>}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pendingApprovals.map((approval) => (
-                        <TableRow key={approval.id}>
-                          <TableCell className="font-mono text-sm">
-                            {approval.transaction_id}
-                          </TableCell>
-                          <TableCell>{approval.student_name}</TableCell>
-                          <TableCell className="font-medium">
-                            {formatCurrency(approval.amount)}
-                          </TableCell>
-                          <TableCell className="capitalize">{approval.payment_method}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-sm">{approval.requester_name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {formatDateTime(new Date(approval.created_at))}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="bg-warning/10 text-warning border-warning animate-pulse">
-                              <Clock className="w-3 h-3 mr-1" />
-                              Pending
-                            </Badge>
-                          </TableCell>
-                          {isAdmin && (
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  variant="default"
-                                  size="sm"
-                                  className="bg-success hover:bg-success/90 text-success-foreground"
-                                  onClick={() => openActionDialog(approval, 'approve')}
-                                >
-                                  <CheckCircle className="w-4 h-4 mr-1" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => openActionDialog(approval, 'reject')}
-                                >
-                                  <XCircle className="w-4 h-4 mr-1" />
-                                  Reject
-                                </Button>
-                              </div>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                <div className="space-y-3">
+                  {pendingApprovals.map((approval) => (
+                    <div key={approval.id} className="p-3 sm:p-4 border rounded-lg bg-card">
+                      {/* Header: Transaction ID + Status */}
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="font-mono text-xs text-muted-foreground truncate">
+                          {approval.transaction_id}
+                        </span>
+                        <Badge variant="outline" className="bg-warning/10 text-warning border-warning animate-pulse text-xs flex-shrink-0">
+                          <Clock className="w-3 h-3 mr-1" />
+                          Pending
+                        </Badge>
+                      </div>
+
+                      {/* Student + Amount */}
+                      <div className="mb-2">
+                        <p className="font-medium text-sm truncate">{approval.student_name}</p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                          <span className="font-semibold">{formatCurrency(approval.amount)}</span>
+                          <span className="capitalize text-muted-foreground">{approval.payment_method}</span>
+                        </div>
+                      </div>
+
+                      {/* Submitted by + Date */}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mb-3">
+                        <span className="flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          {approval.requester_name}
+                        </span>
+                        <span>{formatDateTime(new Date(approval.created_at))}</span>
+                      </div>
+
+                      {/* Actions */}
+                      {isAdmin && (
+                        <div className="flex gap-2 pt-2 border-t">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="flex-1 bg-success hover:bg-success/90 text-success-foreground h-9"
+                            onClick={() => openActionDialog(approval, 'approve')}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="flex-1 h-9"
+                            onClick={() => openActionDialog(approval, 'reject')}
+                          >
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </TabsContent>
@@ -283,41 +272,33 @@ export default function PaymentApprovals() {
                   <p>No approval history yet</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Transaction</TableHead>
-                        <TableHead>Student</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Submitted By</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Reviewed</TableHead>
-                        <TableHead>Notes</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {processedApprovals.map((approval) => (
-                        <TableRow key={approval.id}>
-                          <TableCell className="font-mono text-sm">
-                            {approval.transaction_id}
-                          </TableCell>
-                          <TableCell>{approval.student_name}</TableCell>
-                          <TableCell className="font-medium">
-                            {formatCurrency(approval.amount)}
-                          </TableCell>
-                          <TableCell>{approval.requester_name}</TableCell>
-                          <TableCell>{getStatusBadge(approval.status)}</TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {approval.reviewed_at ? formatDateTime(new Date(approval.reviewed_at)) : '-'}
-                          </TableCell>
-                          <TableCell className="max-w-[200px] truncate">
-                            {approval.reviewer_notes || '-'}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                <div className="space-y-3">
+                  {processedApprovals.map((approval) => (
+                    <div key={approval.id} className="p-3 sm:p-4 border rounded-lg bg-card">
+                      {/* Header: Transaction ID + Status */}
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="font-mono text-xs text-muted-foreground truncate">
+                          {approval.transaction_id}
+                        </span>
+                        {getStatusBadge(approval.status)}
+                      </div>
+
+                      {/* Student + Amount */}
+                      <div className="mb-2">
+                        <p className="font-medium text-sm truncate">{approval.student_name}</p>
+                        <span className="font-semibold text-sm">{formatCurrency(approval.amount)}</span>
+                      </div>
+
+                      {/* Meta info */}
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <p>Submitted by: {approval.requester_name}</p>
+                        <p>Reviewed: {approval.reviewed_at ? formatDateTime(new Date(approval.reviewed_at)) : '-'}</p>
+                        {approval.reviewer_notes && (
+                          <p className="italic">Notes: {approval.reviewer_notes}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </TabsContent>
