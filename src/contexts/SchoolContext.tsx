@@ -691,7 +691,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
 
         if (data) {
           // Create approval request for super admin
-          await supabase.from('payment_approvals').insert({
+          const { error: approvalError } = await supabase.from('payment_approvals').insert({
             payment_id: data.id,
             student_id: paymentData.studentId,
             term_id: paymentData.termId,
@@ -702,6 +702,10 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
             requested_by_email: user.email || null,
             status: 'pending',
           });
+
+          if (approvalError) {
+            console.error('Error creating approval record:', approvalError);
+          }
 
           const newPayment: Payment = {
             id: data.id,
