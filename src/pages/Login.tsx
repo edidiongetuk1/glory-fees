@@ -6,18 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, Lock, User, Loader2, Mail } from 'lucide-react';
+import { GraduationCap, Lock, Loader2, Mail } from 'lucide-react';
 import SplashScreen from '@/components/SplashScreen';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
-  const [activeTab, setActiveTab] = useState('login');
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -26,7 +23,7 @@ export default function Login() {
     }
   }, [isMobile]);
 
-  const { login, signup, isLoading: authLoading } = useAuth();
+  const { login, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -54,54 +51,6 @@ export default function Login() {
         toast({
           title: 'Login Failed',
           description: 'Invalid email or password. Please try again.',
-          variant: 'destructive',
-        });
-      }
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !password.trim() || !name.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all fields',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      toast({
-        title: 'Error',
-        description: 'Password must be at least 6 characters',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const result = await signup(email, password, name);
-      if (result.success) {
-        toast({
-          title: 'Account Created!',
-          description: 'You can now sign in with your credentials.',
-        });
-        setActiveTab('login');
-        setPassword('');
-      } else {
-        toast({
-          title: 'Signup Failed',
-          description: result.error || 'Could not create account. Please try again.',
           variant: 'destructive',
         });
       }
@@ -160,7 +109,7 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Right side - Login/Signup Form */}
+        {/* Right side - Login Form */}
         <div className="w-full lg:w-1/2 flex-1 flex items-center justify-center p-4 sm:p-8 bg-card min-h-screen lg:min-h-0">
           <div className="w-full max-w-md animate-scale-in">
             {/* Mobile branding */}
@@ -174,138 +123,60 @@ export default function Login() {
 
             <Card className="border-0 shadow-elevated">
               <CardHeader className="space-y-1 pb-4">
-                <CardTitle className="text-2xl text-center">Welcome</CardTitle>
+                <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
                 <CardDescription className="text-center">
-                  Sign in or create an account to continue
+                  Sign in to access your account
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="login">Sign In</TabsTrigger>
-                    <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                  </TabsList>
+                <form onSubmit={handleLogin} className="space-y-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email" className="text-sm font-medium">
+                      Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
 
-                  <TabsContent value="login">
-                    <form onSubmit={handleLogin} className="space-y-5">
-                      <div className="space-y-2">
-                        <Label htmlFor="login-email" className="text-sm font-medium">
-                          Email
-                        </Label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                          <Input
-                            id="login-email"
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="pl-10"
-                            disabled={isLoading}
-                          />
-                        </div>
-                      </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password" className="text-sm font-medium">
+                      Password
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="login-password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="login-password" className="text-sm font-medium">
-                          Password
-                        </Label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                          <Input
-                            id="login-password"
-                            type="password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="pl-10"
-                            disabled={isLoading}
-                          />
-                        </div>
-                      </div>
-
-                      <Button type="submit" variant="gold" size="lg" className="w-full" disabled={isLoading}>
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            Signing in...
-                          </>
-                        ) : (
-                          'Sign In'
-                        )}
-                      </Button>
-                    </form>
-                  </TabsContent>
-
-                  <TabsContent value="signup">
-                    <form onSubmit={handleSignup} className="space-y-5">
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-name" className="text-sm font-medium">
-                          Full Name
-                        </Label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                          <Input
-                            id="signup-name"
-                            type="text"
-                            placeholder="Enter your full name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="pl-10"
-                            disabled={isLoading}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-email" className="text-sm font-medium">
-                          Email
-                        </Label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                          <Input
-                            id="signup-email"
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="pl-10"
-                            disabled={isLoading}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-password" className="text-sm font-medium">
-                          Password
-                        </Label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                          <Input
-                            id="signup-password"
-                            type="password"
-                            placeholder="Create a password (min 6 characters)"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="pl-10"
-                            disabled={isLoading}
-                          />
-                        </div>
-                      </div>
-
-                      <Button type="submit" variant="gold" size="lg" className="w-full" disabled={isLoading}>
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            Creating account...
-                          </>
-                        ) : (
-                          'Create Account'
-                        )}
-                      </Button>
-                    </form>
-                  </TabsContent>
-                </Tabs>
+                  <Button type="submit" variant="gold" size="lg" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      'Sign In'
+                    )}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
 
