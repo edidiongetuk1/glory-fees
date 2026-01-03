@@ -1,19 +1,14 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSchool } from '@/contexts/SchoolContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageMeta } from '@/hooks/use-page-meta';
 import {
   Student,
   PaymentMethod,
@@ -31,20 +26,46 @@ import {
   GraduationCap,
   Printer,
   CheckCircle,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 
 export default function Payments() {
-  const { searchStudents, getStudentFee, getStudentBalance, addPayment, activeTerm, activeSession } = useSchool();
+  const {
+    searchStudents,
+    getStudentFee,
+    getStudentBalance,
+    addPayment,
+    activeTerm,
+    activeSession,
+    refreshData,
+  } = useSchool();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+  const navigate = useNavigate();
+
+  usePageMeta({
+    title: 'Payments | Soaring Glory',
+    description: 'Record student school fee payments and print receipts.',
+    canonicalPath: '/payments',
+  });
+
+  const didAutoRefresh = useRef(false);
+
+  useEffect(() => {
+    if (!activeTerm && !didAutoRefresh.current) {
+      didAutoRefresh.current = true;
+      void refreshData();
+    }
+  }, [activeTerm, refreshData]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [amountPaid, setAmountPaid] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [lastReceipt, setLastReceipt] = useState<any>(null);
-  
+
   const receiptRef = useRef<HTMLDivElement>(null);
 
   const handleSearch = (query: string) => {
@@ -162,6 +183,35 @@ export default function Payments() {
             Search for a student and record their fee payment
           </p>
         </div>
+
+        {(!activeSession || !activeTerm) && (
+          <Card className="border-warning/30">
+            <CardContent className="py-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-warning mt-0.5" />
+                  <div>
+                    <p className="font-medium">Configuration needed</p>
+                    <p className="text-sm text-muted-foreground">
+                      {activeSession
+                        ? 'No active term is set, so Fee Payable will show ₦0.'
+                        : 'No active session is set.'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" onClick={() => refreshData()}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Refresh
+                  </Button>
+                  <Button variant="gold" onClick={() => navigate('/fees')}>
+                    Open Fees
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
           {/* Payment Form */}
