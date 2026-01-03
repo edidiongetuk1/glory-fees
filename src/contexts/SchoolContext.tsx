@@ -23,6 +23,8 @@ interface SchoolContextType {
   sessions: AcademicSession[];
   activeSession: AcademicSession | null;
   createSession: (name: string, startYear: number, endYear: number) => Promise<void>;
+  updateSession: (sessionId: string, name: string, startYear: number, endYear: number) => Promise<boolean>;
+  deleteSession: (sessionId: string) => Promise<boolean>;
   setActiveSession: (sessionId: string) => Promise<void>;
 
   // Terms
@@ -266,6 +268,77 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
       }
     },
     [user, toast]
+  );
+
+  const updateSession = useCallback(
+    async (sessionId: string, name: string, startYear: number, endYear: number): Promise<boolean> => {
+      if (!user) {
+        toast({ title: 'Error', description: 'You must be logged in', variant: 'destructive' });
+        return false;
+      }
+
+      try {
+        const { error: updateError } = await supabase
+          .from('academic_sessions')
+          .update({ name, start_year: startYear, end_year: endYear })
+          .eq('id', sessionId);
+
+        if (updateError) throw updateError;
+
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === sessionId ? { ...s, name, startYear, endYear } : s
+          )
+        );
+        toast({ title: 'Success', description: 'Session updated successfully' });
+        return true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to update session';
+        toast({ title: 'Error', description: message, variant: 'destructive' });
+        return false;
+      }
+    },
+    [user, toast]
+  );
+
+  const deleteSession = useCallback(
+    async (sessionId: string): Promise<boolean> => {
+      if (!user) {
+        toast({ title: 'Error', description: 'You must be logged in', variant: 'destructive' });
+        return false;
+      }
+
+      try {
+        // Check if there are terms associated with this session
+        const sessionTerms = terms.filter((t) => t.sessionId === sessionId);
+        if (sessionTerms.length > 0) {
+          // Delete associated terms first
+          const { error: termsDeleteError } = await supabase
+            .from('terms')
+            .delete()
+            .eq('session_id', sessionId);
+          
+          if (termsDeleteError) throw termsDeleteError;
+          setTerms((prev) => prev.filter((t) => t.sessionId !== sessionId));
+        }
+
+        const { error: deleteError } = await supabase
+          .from('academic_sessions')
+          .delete()
+          .eq('id', sessionId);
+
+        if (deleteError) throw deleteError;
+
+        setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+        toast({ title: 'Success', description: 'Session deleted successfully' });
+        return true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to delete session';
+        toast({ title: 'Error', description: message, variant: 'destructive' });
+        return false;
+      }
+    },
+    [user, toast, terms]
   );
 
   const createTerm = useCallback(
@@ -681,6 +754,8 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         sessions,
         activeSession,
         createSession,
+        updateSession,
+        deleteSession,
         setActiveSession,
         terms,
         activeTerm,
