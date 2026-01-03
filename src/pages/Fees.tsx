@@ -22,6 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { usePageMeta } from '@/hooks/use-page-meta';
 import {
   formatCurrency,
   getClassLabel,
@@ -29,24 +30,41 @@ import {
   SECONDARY_CLASSES,
   FeeStructure,
 } from '@/types/school';
-import { DollarSign, Save, Edit, X, AlertCircle } from 'lucide-react';
+import { DollarSign, Save, Edit, X, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function Fees() {
   const {
     sessions,
     terms,
     updateTermFees,
+    setActiveSession,
+    setActiveTerm,
   } = useSchool();
   const { hasPermission } = useAuth();
   const { toast } = useToast();
 
+  usePageMeta({
+    title: 'Fees Management | Soaring Glory',
+    description: 'Manage school fees for each session and term.',
+    canonicalPath: '/fees',
+  });
+
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
   const [selectedTermId, setSelectedTermId] = useState<string>('');
   const [editingFees, setEditingFees] = useState<FeeStructure[] | null>(null);
+  const [isActivating, setIsActivating] = useState(false);
 
   const selectedSession = sessions.find(s => s.id === selectedSessionId);
   const sessionTerms = terms.filter(t => t.sessionId === selectedSessionId);
   const selectedTerm = terms.find(t => t.id === selectedTermId);
+
+  const ensureAllFeeRows = (fees: FeeStructure[]): FeeStructure[] => {
+    const classes = [...PRIMARY_CLASSES, ...SECONDARY_CLASSES];
+    const byClass = new Map(fees.map(f => [f.class, f]));
+    return classes.map((c) => (
+      byClass.get(c.value) ?? { class: c.value, newIntakeFee: 0, returningFee: 0 }
+    ));
+  };
 
   // Reset term selection when session changes
   useEffect(() => {
@@ -75,14 +93,29 @@ export default function Fees() {
     );
   }
 
-  const handleSaveFees = () => {
+  const handleSaveFees = async () => {
     if (!selectedTermId || !editingFees) return;
-    updateTermFees(selectedTermId, editingFees);
+    await updateTermFees(selectedTermId, editingFees);
     setEditingFees(null);
     toast({
       title: 'Fees Updated',
       description: 'Fee structure has been saved successfully',
     });
+  };
+
+  const handleMakeActive = async () => {
+    if (!selectedSessionId || !selectedTermId || !selectedTerm) return;
+    setIsActivating(true);
+    try {
+      await setActiveSession(selectedSessionId);
+      await setActiveTerm(selectedTermId);
+      toast({
+        title: 'Term Activated',
+        description: `${selectedTerm.term} Term is now active`,
+      });
+    } finally {
+      setIsActivating(false);
+    }
   };
 
   const updateFee = (classValue: string, field: 'newIntakeFee' | 'returningFee', value: number) => {
@@ -165,10 +198,10 @@ export default function Fees() {
             </div>
 
             {selectedSessionId && sessionTerms.length === 0 && (
-              <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="mt-4 p-4 bg-warning/10 border border-warning/20 rounded-lg flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-amber-600 dark:text-amber-400">No terms available</p>
+                  <p className="font-medium text-warning">No terms available</p>
                   <p className="text-sm text-muted-foreground">
                     Please create terms for this session in the Settings page first.
                   </p>
@@ -181,14 +214,32 @@ export default function Fees() {
         {/* Fee Configuration Table */}
         {selectedTerm && (
           <Card className="animate-slide-up">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>Fee Structure</CardTitle>
                 <CardDescription>
                   {selectedTerm.term} Term - {selectedSession?.name}
                 </CardDescription>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Status:{' '}
+                  <span className={selectedTerm.isActive ? 'text-success' : 'text-warning'}>
+                    {selectedTerm.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                {!selectedTerm.isActive && (
+                  <Button variant="gold" onClick={handleMakeActive} disabled={isActivating}>
+                    {isActivating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Activating...
+                      </>
+                    ) : (
+                      'Make Active'
+                    )}
+                  </Button>
+                )}
                 {editingFees ? (
                   <>
                     <Button variant="outline" onClick={() => setEditingFees(null)}>
@@ -201,7 +252,10 @@ export default function Fees() {
                     </Button>
                   </>
                 ) : (
-                  <Button variant="outline" onClick={() => setEditingFees([...selectedTerm.fees])}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingFees(ensureAllFeeRows(selectedTerm.fees))}
+                  >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Fees
                   </Button>
