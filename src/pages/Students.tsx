@@ -286,17 +286,12 @@ export default function Students() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Year of Entry</Label>
-                      <Select value={yearOfEntry} onValueChange={setYearOfEntry}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="26">2026 (New)</SelectItem>
-                          <SelectItem value="25">2025</SelectItem>
-                          <SelectItem value="24">2024</SelectItem>
-                          <SelectItem value="00">Old Student</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        value={yearOfEntry}
+                        onChange={(e) => setYearOfEntry(e.target.value)}
+                        placeholder="e.g. 25"
+                        maxLength={4}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Status</Label>
