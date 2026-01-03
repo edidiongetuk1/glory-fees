@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { History, Edit, XCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { History, Edit, XCircle, Loader2, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 import { Payment, PaymentMethod, formatCurrency, formatDateTime } from '@/types/school';
 
 interface PaymentHistoryProps {
@@ -131,9 +131,6 @@ export default function PaymentHistory({ payments, onPaymentUpdated }: PaymentHi
     setEditReason('');
   };
 
-  // Filter out voided payments for display (or show them differently)
-  const activePayments = payments.filter(p => !(p as any).isVoided);
-
   if (payments.length === 0) {
     return null;
   }
@@ -165,7 +162,9 @@ export default function PaymentHistory({ payments, onPaymentUpdated }: PaymentHi
               </TableHeader>
               <TableBody>
                 {payments.slice(0, 10).map((payment) => {
-                  const isVoided = (payment as any).isVoided;
+                  const isVoided = !!payment.isVoided;
+                  const approvalStatus = payment.approvalStatus ?? 'pending';
+
                   return (
                     <TableRow key={payment.id} className={isVoided ? 'opacity-50' : ''}>
                       <TableCell className="font-mono text-sm">
@@ -181,8 +180,21 @@ export default function PaymentHistory({ payments, onPaymentUpdated }: PaymentHi
                       <TableCell>
                         {isVoided ? (
                           <Badge variant="destructive">Voided</Badge>
+                        ) : approvalStatus === 'approved' ? (
+                          <Badge className="bg-success/10 text-success border-success">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Approved
+                          </Badge>
+                        ) : approvalStatus === 'rejected' ? (
+                          <Badge variant="destructive">
+                            <XCircle className="w-3 h-3 mr-1" />
+                            Rejected
+                          </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-success border-success">Active</Badge>
+                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning">
+                            <Clock className="w-3 h-3 mr-1" />
+                            Pending
+                          </Badge>
                         )}
                       </TableCell>
                       {canEdit && (

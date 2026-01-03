@@ -45,7 +45,7 @@ export default function Reports() {
   // Helper to get total paid for a student
   const getStudentPaid = (studentId: string) => {
     return payments
-      .filter(p => p.studentId === studentId)
+      .filter((p) => p.studentId === studentId && p.approvalStatus === 'approved' && !p.isVoided)
       .reduce((sum, p) => sum + p.amountPaid, 0);
   };
   const [activeTab, setActiveTab] = useState('debtors');

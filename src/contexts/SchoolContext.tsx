@@ -185,6 +185,8 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
           paymentMethod: p.payment_method as Payment['paymentMethod'],
           receivedBy: '',
           createdAt: new Date(p.created_at),
+          isVoided: p.is_voided,
+          approvalStatus: (p.approval_status ?? 'pending') as Payment['approvalStatus'],
         }))
       );
     } catch (err) {
@@ -713,6 +715,8 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
             paymentMethod: data.payment_method as Payment['paymentMethod'],
             receivedBy: paymentData.receivedBy,
             createdAt: new Date(data.created_at),
+            approvalStatus: (data.approval_status ?? 'pending') as Payment['approvalStatus'],
+            isVoided: data.is_voided,
           };
           setPayments((prev) => [newPayment, ...prev]);
           
@@ -746,8 +750,14 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
       if (!student || !activeTerm) return 0;
 
       const fee = getStudentFee(student);
-      const totalPaid = payments
-        .filter((p) => p.studentId === studentId && p.termId === activeTerm.id)
+       const totalPaid = payments
+        .filter(
+          (p) =>
+            p.studentId === studentId &&
+            p.termId === activeTerm.id &&
+            p.approvalStatus === 'approved' &&
+            !p.isVoided
+        )
         .reduce((sum, p) => sum + p.amountPaid, 0);
 
       return fee - totalPaid;
@@ -761,7 +771,9 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
 
   const getTotalCollected = useCallback((): number => {
     if (!activeTerm) return 0;
-    return payments.filter((p) => p.termId === activeTerm.id).reduce((sum, p) => sum + p.amountPaid, 0);
+    return payments
+      .filter((p) => p.termId === activeTerm.id && p.approvalStatus === 'approved' && !p.isVoided)
+      .reduce((sum, p) => sum + p.amountPaid, 0);
   }, [payments, activeTerm]);
 
   const getDebtorsByClass = useCallback((): Record<SchoolClass, Student[]> => {
