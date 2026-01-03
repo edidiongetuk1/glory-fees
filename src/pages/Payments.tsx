@@ -142,11 +142,7 @@ export default function Payments() {
       term: activeTerm,
     });
 
-    toast({
-      title: 'Payment Recorded',
-      description: `Payment of ${formatCurrency(amount)} received successfully`,
-    });
-
+    // Toast is handled in SchoolContext now
     setAmountPaid('');
   };
 

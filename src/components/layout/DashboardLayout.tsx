@@ -18,6 +18,7 @@ import {
   ChevronDown,
   UserCog,
   ClipboardList,
+  ClipboardCheck,
 } from 'lucide-react';
 
 interface NavItem {
@@ -31,6 +32,7 @@ const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Users, label: 'Students', href: '/students' },
   { icon: CreditCard, label: 'Payments', href: '/payments' },
+  { icon: ClipboardCheck, label: 'Approvals', href: '/approvals' },
   { icon: ClipboardList, label: 'Records', href: '/records' },
   { icon: FileText, label: 'Reports', href: '/reports' },
   { icon: UserCog, label: 'Roles', href: '/roles', permission: 'manageRoles' },

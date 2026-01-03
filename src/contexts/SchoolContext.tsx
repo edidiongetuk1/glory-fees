@@ -680,6 +680,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
             transaction_id: transactionId,
             notes: null,
             user_id: user.id,
+            approval_status: 'pending',
           })
           .select()
           .single();
@@ -687,6 +688,19 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         if (insertError) throw insertError;
 
         if (data) {
+          // Create approval request for super admin
+          await supabase.from('payment_approvals').insert({
+            payment_id: data.id,
+            student_id: paymentData.studentId,
+            term_id: paymentData.termId,
+            amount: paymentData.amountPaid,
+            payment_method: paymentData.paymentMethod,
+            transaction_id: transactionId,
+            requested_by: user.id,
+            requested_by_email: user.email || null,
+            status: 'pending',
+          });
+
           const newPayment: Payment = {
             id: data.id,
             transactionId: data.transaction_id,
@@ -701,6 +715,12 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
             createdAt: new Date(data.created_at),
           };
           setPayments((prev) => [newPayment, ...prev]);
+          
+          toast({
+            title: 'Payment Recorded',
+            description: 'Payment submitted for admin approval',
+          });
+          
           return newPayment;
         }
         return null;
