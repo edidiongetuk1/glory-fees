@@ -49,24 +49,42 @@ export default function PaymentApprovals() {
 
   const fetchApprovals = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch approvals
+      const { data: approvalsData, error: approvalsError } = await supabase
         .from('payment_approvals')
-        .select(`
-          *,
-          students:student_id (first_name, surname, reg_number),
-          profiles:requested_by (email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (approvalsError) throw approvalsError;
 
-      const enrichedData = (data || []).map((item: any) => ({
-        ...item,
-        student_name: item.students 
-          ? `${item.students.first_name} ${item.students.surname} (${item.students.reg_number})`
-          : 'Unknown Student',
-        requester_name: item.profiles?.email || item.requested_by_email || 'Unknown',
-      }));
+      // Fetch students separately
+      const studentIds = [...new Set((approvalsData || []).map(a => a.student_id))];
+      const { data: studentsData } = await supabase
+        .from('students')
+        .select('id, first_name, surname, reg_number')
+        .in('id', studentIds.length > 0 ? studentIds : ['00000000-0000-0000-0000-000000000000']);
+
+      // Fetch profiles separately
+      const requesterIds = [...new Set((approvalsData || []).map(a => a.requested_by))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .in('id', requesterIds.length > 0 ? requesterIds : ['00000000-0000-0000-0000-000000000000']);
+
+      const studentsMap = new Map((studentsData || []).map(s => [s.id, s]));
+      const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+
+      const enrichedData = (approvalsData || []).map((item: any) => {
+        const student = studentsMap.get(item.student_id);
+        const profile = profilesMap.get(item.requested_by);
+        return {
+          ...item,
+          student_name: student 
+            ? `${student.first_name} ${student.surname} (${student.reg_number})`
+            : 'Unknown Student',
+          requester_name: profile?.email || item.requested_by_email || 'Unknown',
+        };
+      });
 
       setApprovals(enrichedData);
     } catch (error) {
