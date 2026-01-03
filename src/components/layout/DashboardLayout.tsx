@@ -17,6 +17,7 @@ import {
   FolderOpen,
   ChevronDown,
   UserCog,
+  DollarSign,
 } from 'lucide-react';
 
 interface NavItem {
@@ -31,6 +32,7 @@ const navItems: NavItem[] = [
   { icon: Users, label: 'Students', href: '/students' },
   { icon: CreditCard, label: 'Payments', href: '/payments' },
   { icon: FileText, label: 'Reports', href: '/reports' },
+  { icon: DollarSign, label: 'Fees', href: '/fees', permission: 'settings' },
   { icon: UserCog, label: 'Roles', href: '/roles', permission: 'manageRoles' },
   { icon: Settings, label: 'Settings', href: '/settings', permission: 'settings' },
 ];
