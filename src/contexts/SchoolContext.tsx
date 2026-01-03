@@ -606,7 +606,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
             id: data.id,
             transactionId: data.transaction_id,
             studentId: data.student_id,
-            sessionId: '',
+            sessionId: paymentData.sessionId,
             termId: data.term_id,
             amountPaid: Number(data.amount_paid),
             feePayable: paymentData.feePayable,
@@ -616,7 +616,6 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
             createdAt: new Date(data.created_at),
           };
           setPayments((prev) => [newPayment, ...prev]);
-          toast({ title: 'Success', description: 'Payment recorded successfully' });
           return newPayment;
         }
         return null;
