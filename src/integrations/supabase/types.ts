@@ -203,6 +203,7 @@ export type Database = {
           is_voided: boolean
           notes: string | null
           payment_method: string
+          received_by: string | null
           student_id: string
           term_id: string
           transaction_id: string
@@ -220,6 +221,7 @@ export type Database = {
           is_voided?: boolean
           notes?: string | null
           payment_method: string
+          received_by?: string | null
           student_id: string
           term_id: string
           transaction_id: string
@@ -237,6 +239,7 @@ export type Database = {
           is_voided?: boolean
           notes?: string | null
           payment_method?: string
+          received_by?: string | null
           student_id?: string
           term_id?: string
           transaction_id?: string
