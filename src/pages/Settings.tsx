@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSchool } from '@/contexts/SchoolContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +44,7 @@ import {
   SECONDARY_CLASSES,
   FeeStructure,
   Term,
+  UserRole,
 } from '@/types/school';
 import {
   Settings as SettingsIcon,
@@ -52,7 +56,15 @@ import {
   Calendar,
   ArrowUpCircle,
   Loader2,
+  UserCog,
+  Shield,
 } from 'lucide-react';
+
+interface UserWithRole {
+  id: string;
+  role: UserRole;
+  created_at: string;
+}
 
 export default function Settings() {
   const {
@@ -76,6 +88,77 @@ export default function Settings() {
   const [isSessionDialogOpen, setIsSessionDialogOpen] = useState(false);
   const [editingFees, setEditingFees] = useState<FeeStructure[] | null>(null);
   const [isPromoting, setIsPromoting] = useState(false);
+  
+  // Role management state
+  const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [updatingRole, setUpdatingRole] = useState<string | null>(null);
+
+  const isSuperAdminUser = isSuperAdmin();
+
+  // Fetch users for role management
+  useEffect(() => {
+    if (isSuperAdminUser) {
+      fetchUsers();
+    }
+  }, [isSuperAdminUser]);
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setUsers((data || []).map(r => ({
+        id: r.user_id,
+        role: r.role as UserRole,
+        created_at: r.created_at,
+      })));
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const updateUserRole = async (userId: string, newRole: UserRole) => {
+    setUpdatingRole(userId);
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .update({ role: newRole })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      toast({
+        title: 'Role Updated',
+        description: `User role changed to ${newRole.replace('_', ' ')}`,
+      });
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update role',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdatingRole(null);
+    }
+  };
+
+  const getRoleBadgeVariant = (role: UserRole): 'default' | 'secondary' | 'outline' => {
+    switch (role) {
+      case 'super_admin': return 'default';
+      case 'bursary': return 'secondary';
+      default: return 'outline';
+    }
+  };
 
   if (!hasPermission('settings')) {
     return (
@@ -492,6 +575,109 @@ export default function Settings() {
                   </TableBody>
                 </Table>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Role Management - Super Admin Only */}
+        {isSuperAdminUser && (
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCog className="w-5 h-5 text-primary" />
+                Role Management
+              </CardTitle>
+              <CardDescription>
+                Assign roles to staff members. Only super admins can manage user roles.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Role Descriptions */}
+              <div className="grid gap-3 md:grid-cols-3 mb-6">
+                <div className="p-3 rounded-lg border border-primary/20 bg-primary/5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Shield className="w-4 h-4 text-primary" />
+                    <Badge variant="default">Super Admin</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Full access: Edit/delete all records, approve fees, manage roles
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg border border-secondary/20 bg-secondary/5">
+                  <Badge variant="secondary" className="mb-1">Bursary</Badge>
+                  <p className="text-xs text-muted-foreground">
+                    Add students, record payments, request fee changes
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg border">
+                  <Badge variant="outline" className="mb-1">Staff</Badge>
+                  <p className="text-xs text-muted-foreground">
+                    View-only access to students and payments
+                  </p>
+                </div>
+              </div>
+
+              {/* Users Table */}
+              {loadingUsers ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : users.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No users found
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>User ID</TableHead>
+                        <TableHead>Current Role</TableHead>
+                        <TableHead>Joined</TableHead>
+                        <TableHead className="text-right">Change Role</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-mono text-sm">
+                            {user.id.slice(0, 8)}...
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getRoleBadgeVariant(user.role)}>
+                              {user.role === 'super_admin' ? 'Super Admin' : 
+                               user.role === 'bursary' ? 'Bursary' : 'Staff'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {new Date(user.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Select
+                              value={user.role}
+                              onValueChange={(value: UserRole) => updateUserRole(user.id, value)}
+                              disabled={updatingRole === user.id}
+                            >
+                              <SelectTrigger className="w-[140px] ml-auto">
+                                {updatingRole === user.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <SelectValue />
+                                )}
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="super_admin">Super Admin</SelectItem>
+                                <SelectItem value="bursary">Bursary</SelectItem>
+                                <SelectItem value="staff">Staff</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
