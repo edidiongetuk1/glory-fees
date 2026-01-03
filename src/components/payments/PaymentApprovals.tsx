@@ -212,6 +212,7 @@ export default function PaymentApprovals() {
                         <TableHead>Method</TableHead>
                         <TableHead>Submitted By</TableHead>
                         <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
                         {isAdmin && <TableHead className="text-right">Actions</TableHead>}
                       </TableRow>
                     </TableHeader>
@@ -235,22 +236,27 @@ export default function PaymentApprovals() {
                           <TableCell className="text-muted-foreground">
                             {formatDateTime(new Date(approval.created_at))}
                           </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-warning/10 text-warning border-warning animate-pulse">
+                              <Clock className="w-3 h-3 mr-1" />
+                              Pending
+                            </Badge>
+                          </TableCell>
                           {isAdmin && (
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
                                 <Button
-                                  variant="outline"
+                                  variant="default"
                                   size="sm"
-                                  className="text-success hover:text-success hover:bg-success/10"
+                                  className="bg-success hover:bg-success/90 text-success-foreground"
                                   onClick={() => openActionDialog(approval, 'approve')}
                                 >
                                   <CheckCircle className="w-4 h-4 mr-1" />
                                   Approve
                                 </Button>
                                 <Button
-                                  variant="outline"
+                                  variant="destructive"
                                   size="sm"
-                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                   onClick={() => openActionDialog(approval, 'reject')}
                                 >
                                   <XCircle className="w-4 h-4 mr-1" />
