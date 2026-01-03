@@ -11,16 +11,19 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { History, Edit, XCircle, Loader2, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
-import { Payment, PaymentMethod, formatCurrency, formatDateTime } from '@/types/school';
+import { History, Edit, XCircle, Loader2, AlertTriangle, Clock, CheckCircle, Download } from 'lucide-react';
+import { Payment, PaymentMethod, formatCurrency, formatDateTime, Student, getClassLabel } from '@/types/school';
+import { useSchool } from '@/contexts/SchoolContext';
 
 interface PaymentHistoryProps {
   payments: Payment[];
   onPaymentUpdated: () => void;
+  student?: Student;
 }
 
-export default function PaymentHistory({ payments, onPaymentUpdated }: PaymentHistoryProps) {
+export default function PaymentHistory({ payments, onPaymentUpdated, student }: PaymentHistoryProps) {
   const { user, isSuperAdmin } = useAuth();
+  const { activeSession, activeTerm, getStudentFee } = useSchool();
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [voidingPayment, setVoidingPayment] = useState<Payment | null>(null);
   const [editAmount, setEditAmount] = useState('');
@@ -30,6 +33,96 @@ export default function PaymentHistory({ payments, onPaymentUpdated }: PaymentHi
   const [loading, setLoading] = useState(false);
 
   const canEdit = isSuperAdmin();
+
+  const handlePrintReceipt = (payment: Payment) => {
+    if (!student || !activeSession || !activeTerm) return;
+    
+    const feePayable = getStudentFee(student);
+    
+    const printWindow = window.open('', '', 'width=400,height=600');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Payment Receipt</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              .receipt { max-width: 350px; margin: 0 auto; }
+              .header { text-align: center; margin-bottom: 20px; }
+              .logo { font-size: 24px; font-weight: bold; color: #1a365d; }
+              .divider { border-top: 1px dashed #ccc; margin: 15px 0; }
+              .row { display: flex; justify-content: space-between; margin: 8px 0; gap: 12px; }
+              .label { color: #666; }
+              .value { font-weight: 500; text-align: right; }
+              .text-success { color: #16a34a; }
+              .text-warning { color: #d97706; }
+              .total { font-size: 18px; font-weight: bold; margin-top: 15px; }
+              .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+            </style>
+          </head>
+          <body>
+            <div class="receipt">
+              <div class="header">
+                <div class="logo">Soaring Glory</div>
+                <p style="font-size: 14px; color: #666;">International Model Schools</p>
+                <p style="font-size: 12px; color: #666; margin-top: 8px;">${formatDateTime(payment.createdAt)}</p>
+              </div>
+              <div class="divider"></div>
+              <div class="row">
+                <span class="label">Transaction ID</span>
+                <span class="value" style="font-family: monospace; font-size: 12px;">${payment.transactionId}</span>
+              </div>
+              <div class="row">
+                <span class="label">Session</span>
+                <span class="value">${activeSession.name}</span>
+              </div>
+              <div class="row">
+                <span class="label">Term</span>
+                <span class="value">${activeTerm.term} Term</span>
+              </div>
+              <div class="divider"></div>
+              <div class="row">
+                <span class="label">Student Name</span>
+                <span class="value">${student.firstName} ${student.surname}</span>
+              </div>
+              <div class="row">
+                <span class="label">Reg. Number</span>
+                <span class="value" style="font-family: monospace;">${student.regNumber}</span>
+              </div>
+              <div class="row">
+                <span class="label">Class</span>
+                <span class="value">${getClassLabel(student.class)}</span>
+              </div>
+              <div class="divider"></div>
+              <div class="row">
+                <span class="label">Fee Payable</span>
+                <span class="value">${formatCurrency(feePayable)}</span>
+              </div>
+              <div class="row">
+                <span class="label">Payment Method</span>
+                <span class="value" style="text-transform: capitalize;">${payment.paymentMethod}</span>
+              </div>
+              <div class="divider"></div>
+              <div class="row total">
+                <span>Amount Paid</span>
+                <span class="text-success">${formatCurrency(payment.amountPaid)}</span>
+              </div>
+              <div class="row">
+                <span class="label">Outstanding Balance</span>
+                <span class="value ${payment.outstandingBalance > 0 ? 'text-warning' : 'text-success'}">${formatCurrency(payment.outstandingBalance)}</span>
+              </div>
+              <div class="footer">
+                <p>Received by: ${payment.receivedBy}</p>
+                <p style="margin-top: 8px;">Thank you for your payment!</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
 
   const handleEditPayment = async () => {
     if (!editingPayment || !user || !editReason.trim()) {
@@ -157,6 +250,7 @@ export default function PaymentHistory({ payments, onPaymentUpdated }: PaymentHi
                   <TableHead>Method</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Receipt</TableHead>
                   {canEdit && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
@@ -195,6 +289,22 @@ export default function PaymentHistory({ payments, onPaymentUpdated }: PaymentHi
                             <Clock className="w-3 h-3 mr-1" />
                             Pending
                           </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {!isVoided && approvalStatus === 'approved' && student ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePrintReceipt(payment)}
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            Receipt
+                          </Button>
+                        ) : approvalStatus === 'pending' ? (
+                          <span className="text-xs text-muted-foreground">Awaiting approval</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       {canEdit && (
