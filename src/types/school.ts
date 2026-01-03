@@ -85,6 +85,9 @@ export interface Payment {
   paymentMethod: PaymentMethod;
   receivedBy: string;
   createdAt: Date;
+  // Approval workflow
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  isVoided?: boolean;
 }
 
 export interface FeeChangeRequest {

@@ -42,12 +42,21 @@ export default function Records() {
       }
 
       // Calculate total payments for this student in the selected term
-      const studentPayments = payments.filter(p => {
+      const studentPayments = payments.filter((p) => {
         const matchesStudent = p.studentId === student.id;
-        const matchesTerm = selectedTerm !== 'all' 
-          ? p.termId === selectedTerm 
-          : (activeTerm ? p.termId === activeTerm.id : true);
-        return matchesStudent && matchesTerm;
+        const matchesTerm =
+          selectedTerm !== 'all'
+            ? p.termId === selectedTerm
+            : activeTerm
+              ? p.termId === activeTerm.id
+              : true;
+
+        return (
+          matchesStudent &&
+          matchesTerm &&
+          p.approvalStatus === 'approved' &&
+          !p.isVoided
+        );
       });
 
       const totalPaid = studentPayments.reduce((sum, p) => sum + p.amountPaid, 0);

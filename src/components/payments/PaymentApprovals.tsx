@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSchool } from '@/contexts/SchoolContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ interface PaymentApproval {
 
 export default function PaymentApprovals() {
   const { user, isSuperAdmin } = useAuth();
+  const { refreshData } = useSchool();
   const [approvals, setApprovals] = useState<PaymentApproval[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedApproval, setSelectedApproval] = useState<PaymentApproval | null>(null);
@@ -130,6 +132,7 @@ export default function PaymentApprovals() {
       setAction(null);
       setNotes('');
       fetchApprovals();
+      void refreshData();
     } catch (error) {
       console.error('Error processing approval:', error);
       toast.error('Failed to process approval');
