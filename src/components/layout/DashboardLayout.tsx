@@ -17,7 +17,7 @@ import {
   FolderOpen,
   ChevronDown,
   UserCog,
-  DollarSign,
+  ClipboardList,
 } from 'lucide-react';
 
 interface NavItem {
@@ -31,8 +31,8 @@ const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Users, label: 'Students', href: '/students' },
   { icon: CreditCard, label: 'Payments', href: '/payments' },
+  { icon: ClipboardList, label: 'Records', href: '/records' },
   { icon: FileText, label: 'Reports', href: '/reports' },
-  { icon: DollarSign, label: 'Fees', href: '/fees', permission: 'settings' },
   { icon: UserCog, label: 'Roles', href: '/roles', permission: 'manageRoles' },
   { icon: Settings, label: 'Settings', href: '/settings', permission: 'settings' },
 ];
