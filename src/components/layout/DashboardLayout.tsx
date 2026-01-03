@@ -5,6 +5,14 @@ import { useSchool } from '@/contexts/SchoolContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   GraduationCap,
   LayoutDashboard,
   Users,
@@ -19,6 +27,7 @@ import {
   UserCog,
   ClipboardList,
   ClipboardCheck,
+  Check,
 } from 'lucide-react';
 
 interface NavItem {
@@ -42,9 +51,12 @@ const navItems: NavItem[] = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout, hasPermission } = useAuth();
-  const { activeSession, activeTerm } = useSchool();
+  const { activeSession, activeTerm, terms, setActiveTerm } = useSchool();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Get terms for the active session
+  const sessionTerms = terms.filter(t => t.sessionId === activeSession?.id);
 
   const handleLogout = () => {
     logout();
@@ -95,23 +107,55 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           {/* Active Session/Term */}
-          <div className="p-4 mx-4 mt-4 rounded-lg bg-sidebar-accent">
-            <div className="flex items-center gap-2 text-sidebar-foreground/60 text-xs mb-2">
-              <FolderOpen className="w-4 h-4" />
-              <span>Active Session</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sidebar-foreground text-sm">
-                  {activeSession?.name || 'No Session'}
-                </p>
-                <p className="text-xs text-sidebar-primary">
-                  {activeTerm ? `${activeTerm.term} Term` : 'No Term Selected'}
-                </p>
-              </div>
-              <ChevronDown className="w-4 h-4 text-sidebar-foreground/60" />
-            </div>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-full p-4 mx-4 mt-4 rounded-lg bg-sidebar-accent hover:bg-sidebar-accent/80 transition-colors cursor-pointer text-left">
+                <div className="flex items-center gap-2 text-sidebar-foreground/60 text-xs mb-2">
+                  <FolderOpen className="w-4 h-4" />
+                  <span>Active Session</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sidebar-foreground text-sm">
+                      {activeSession?.name || 'No Session'}
+                    </p>
+                    <p className="text-xs text-sidebar-primary">
+                      {activeTerm ? `${activeTerm.term} Term` : 'No Term Selected'}
+                    </p>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-sidebar-foreground/60" />
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              className="w-56 bg-popover border border-border shadow-lg z-50" 
+              align="start"
+              sideOffset={4}
+            >
+              <DropdownMenuLabel className="text-muted-foreground">
+                Select Term
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {sessionTerms.length > 0 ? (
+                sessionTerms.map((term) => (
+                  <DropdownMenuItem
+                    key={term.id}
+                    onClick={() => setActiveTerm(term.id)}
+                    className="flex items-center justify-between cursor-pointer"
+                  >
+                    <span>{term.term} Term</span>
+                    {activeTerm?.id === term.id && (
+                      <Check className="w-4 h-4 text-primary" />
+                    )}
+                  </DropdownMenuItem>
+                ))
+              ) : (
+                <DropdownMenuItem disabled>
+                  No terms available
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1">
