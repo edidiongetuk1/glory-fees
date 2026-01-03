@@ -62,6 +62,7 @@ import {
 
 interface UserWithRole {
   id: string;
+  email: string | null;
   role: UserRole;
   created_at: string;
 }
@@ -106,15 +107,28 @@ export default function Settings() {
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
-      const { data, error } = await supabase
+      // Fetch user roles
+      const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (rolesError) throw rolesError;
 
-      setUsers((data || []).map(r => ({
+      // Fetch profiles for emails
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email');
+
+      if (profilesError) throw profilesError;
+
+      // Create a map of user_id to email
+      const emailMap = new Map<string, string | null>();
+      (profilesData || []).forEach(p => emailMap.set(p.id, p.email));
+
+      setUsers((rolesData || []).map(r => ({
         id: r.user_id,
+        email: emailMap.get(r.user_id) || null,
         role: r.role as UserRole,
         created_at: r.created_at,
       })));
@@ -311,6 +325,33 @@ export default function Settings() {
               </Dialog>
             </CardHeader>
             <CardContent className="space-y-2">
+              {/* Session Dropdown */}
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Active Session</Label>
+                <Select
+                  value={activeSession?.id || ''}
+                  onValueChange={(value) => setActiveSession(value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a session" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sessions.map((session) => (
+                      <SelectItem key={session.id} value={session.id}>
+                        <div className="flex items-center gap-2">
+                          <FolderOpen className="w-4 h-4" />
+                          <span>{session.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({session.startYear}-{session.endYear})
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Session List */}
               {sessions.map((session) => (
                 <button
                   key={session.id}
@@ -631,7 +672,7 @@ export default function Settings() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>User ID</TableHead>
+                        <TableHead>Email</TableHead>
                         <TableHead>Current Role</TableHead>
                         <TableHead>Joined</TableHead>
                         <TableHead className="text-right">Change Role</TableHead>
@@ -640,8 +681,8 @@ export default function Settings() {
                     <TableBody>
                       {users.map((user) => (
                         <TableRow key={user.id}>
-                          <TableCell className="font-mono text-sm">
-                            {user.id.slice(0, 8)}...
+                          <TableCell className="font-medium">
+                            {user.email || <span className="text-muted-foreground italic">No email</span>}
                           </TableCell>
                           <TableCell>
                             <Badge variant={getRoleBadgeVariant(user.role)}>
